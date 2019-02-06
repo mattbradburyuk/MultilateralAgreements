@@ -7,7 +7,9 @@ import org.junit.Test
 
 class ProposalContractTests(){
 
-    private val ledgerServices = MockServices()
+    private val ledgerServices = MockServices(
+
+    )
 
     @Test
     fun `dummy test`() {
