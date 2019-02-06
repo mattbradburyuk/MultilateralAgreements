@@ -8,17 +8,19 @@ import net.corda.core.utilities.ProgressTracker
 // * Flows *
 // *********
 
-object ExampleFlows {
+
     @InitiatingFlow
     @StartableByRPC
     class Initiator : FlowLogic<Unit>() {
         override val progressTracker = ProgressTracker()
-
+//        init {
+//            logger.info("MB: Initiator called")
+//        }
         @Suspendable
         override fun call() {
             // Initiator flow logic goes here.
 
-            logger.info("Initiator.call called")
+            logger.info("MB: Initiator.call called")
         }
     }
 
@@ -29,4 +31,3 @@ object ExampleFlows {
             // Responder flow logic goes here.
         }
     }
-}
