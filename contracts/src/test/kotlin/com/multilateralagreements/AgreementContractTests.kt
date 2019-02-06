@@ -1,7 +1,7 @@
-package com.multilateralagreements
+package com.multilateralagreements.contracts
 
 import com.multilateralagreements.contracts.AgreementContract
-import com.multilateralagreements.states.AgreementState
+import com.multilateralagreements.contracts.AgreementState
 import net.corda.core.identity.CordaX500Name
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices

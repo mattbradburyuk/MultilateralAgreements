@@ -1,4 +1,4 @@
-package com.multilateralagreements
+package com.multilateralagreements.workflows.tests
 
 import net.corda.testing.node.MockServices
 import org.junit.Test

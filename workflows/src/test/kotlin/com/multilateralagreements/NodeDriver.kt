@@ -1,4 +1,4 @@
-package com.multilateralagreements
+package com.multilateralagreements.workflows.tests
 
 import net.corda.core.identity.CordaX500Name
 import net.corda.core.utilities.getOrThrow

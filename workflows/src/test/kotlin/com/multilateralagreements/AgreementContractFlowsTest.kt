@@ -1,8 +1,8 @@
-package com.multilateralagreements
+package com.multilateralagreements.workflows.tests
 
-import com.multilateralagreements.flows.CreateAgreementFlow
-import com.multilateralagreements.flows.CreateAgreementResponderFlow
-import com.multilateralagreements.states.AgreementState
+import com.multilateralagreements.workflows.CreateAgreementFlow
+import com.multilateralagreements.workflows.CreateAgreementResponderFlow
+import com.multilateralagreements.contracts.AgreementState
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkParameters
@@ -15,7 +15,7 @@ import kotlin.test.assert
 
 class AgreementContractFlowsTest {
 
-    val mockNetworkParameters = MockNetworkParameters(listOf(TestCordapp.findCordapp("com.multilateralagreements")))
+    val mockNetworkParameters = MockNetworkParameters(listOf(TestCordapp.findCordapp("com.multilateralagreements.contracts")))
 
     private val network = MockNetwork(mockNetworkParameters)
 

@@ -1,4 +1,4 @@
-package com.multilateralagreements
+package com.multilateralagreements.client
 
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.utilities.NetworkHostAndPort.Companion.parse

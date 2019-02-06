@@ -1,4 +1,4 @@
-package com.multilateralagreements.flows
+package com.multilateralagreements.workflows
 
 import co.paralleluniverse.fibers.Suspendable
 import net.corda.core.flows.*

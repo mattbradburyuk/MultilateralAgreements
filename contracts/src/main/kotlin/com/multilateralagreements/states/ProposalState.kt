@@ -1,4 +1,4 @@
-package com.multilateralagreements.states
+package com.multilateralagreements.contracts
 
 
 import com.multilateralagreements.contracts.ProposalContract

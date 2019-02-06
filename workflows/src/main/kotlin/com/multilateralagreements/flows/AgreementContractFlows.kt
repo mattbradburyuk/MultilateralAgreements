@@ -1,8 +1,8 @@
-package com.multilateralagreements.flows
+package com.multilateralagreements.workflows
 
 import co.paralleluniverse.fibers.Suspendable
 import com.multilateralagreements.contracts.AgreementContract
-import com.multilateralagreements.states.AgreementState
+import com.multilateralagreements.contracts.AgreementState
 import net.corda.core.contracts.TransactionState
 import net.corda.core.contracts.requireThat
 import net.corda.core.flows.*
@@ -49,7 +49,7 @@ class CreateAgreementFlow(val agreement: String, val otherParty: Party): FlowLog
 
         val stx: SignedTransaction = subFlow(CollectSignaturesFlow(pstx,listOf(session)))
 
-        return subFlow(FinalityFlow(stx, listOf(session), progressTracker))
+        return subFlow(FinalityFlow(stx, listOf(session)))
 
 
    }

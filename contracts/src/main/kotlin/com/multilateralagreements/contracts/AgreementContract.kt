@@ -1,6 +1,6 @@
 package com.multilateralagreements.contracts
 
-import com.multilateralagreements.states.AgreementState
+import com.multilateralagreements.contracts.AgreementState
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.requireThat
