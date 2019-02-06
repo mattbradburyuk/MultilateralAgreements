@@ -1,4 +1,6 @@
-package com.multilateralagreements.contracts
+package com.multilateralagreements.contracts.tests
+
+
 
 import com.multilateralagreements.contracts.AgreementContract
 import com.multilateralagreements.contracts.AgreementState

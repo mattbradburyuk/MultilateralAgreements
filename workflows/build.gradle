@@ -7,7 +7,7 @@ cordapp {
     targetPlatformVersion 4
     minimumPlatformVersion 4
     workflow {
-        name "Template Flows"
+        name "workflows"
         vendor "Corda Open Source"
         licence "A liberal, open source licence"
         versionId 1
