@@ -1,15 +1,15 @@
-package com.template
+package com.multilateralagreements
 
 
-import com.template.flows.Responder
-//import com.template.flows.Responder
+import com.multilateralagreements.flows.Responder
+//import com.multilateralagreements.flows.Responder
 import net.corda.testing.node.MockNetwork
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 class FlowTests {
-    private val network = MockNetwork(listOf("com.template"))
+    private val network = MockNetwork(listOf("com.multilateralagreements"))
     private val a = network.createNode()
     private val b = network.createNode()
 

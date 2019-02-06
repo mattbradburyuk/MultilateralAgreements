@@ -1,13 +1,18 @@
-package com.template
+package com.multilateralagreements
 
 import net.corda.testing.node.MockServices
 import org.junit.Test
 
-class ContractTests {
+
+
+class ProposalContractTests(){
+
     private val ledgerServices = MockServices()
 
     @Test
     fun `dummy test`() {
 
     }
+
+
 }
