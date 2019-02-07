@@ -3,6 +3,7 @@ package com.multilateralagreements.workflows.tests
 import com.multilateralagreements.workflows.CreateAgreementFlow
 import com.multilateralagreements.workflows.CreateAgreementResponderFlow
 import com.multilateralagreements.contracts.AgreementState
+import net.corda.core.node.services.queryBy
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkParameters
@@ -38,7 +39,7 @@ class AgreementContractFlowsTest {
     fun tearDown() = network.stopNodes()
 
     @Test
-    fun `dummy test`() {
+    fun `create agreement flow test`() {
 
         val flow = CreateAgreementFlow("This is a mock agreement", partyb)
 
@@ -51,6 +52,9 @@ class AgreementContractFlowsTest {
         assert(returnedTx.toLedgerTransaction(a.services).outputs.single().data is AgreementState)
 
 
+        val result = b.services.vaultService.queryBy<AgreementState>()
+
+        assert(result.states[0].ref.txhash == returnedTx.id)
 
     }
 }
