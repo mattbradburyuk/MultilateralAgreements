@@ -1,6 +1,7 @@
 package com.multilateralagreements.contracts
 
 import com.multilateralagreements.contracts.AgreementState
+import net.corda.core.contracts.Command
 import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.requireThat
@@ -16,24 +17,61 @@ class AgreementContract : Contract {
 
     }
 
-    // A transaction is valid if the verify() function of the contract of all the transaction's input and output states
-    // does not throw an exception.
-    override fun verify(tx: LedgerTransaction) {
-
-
-
-        requireThat {
-
-            val outputState: AgreementState = tx.outputStates.single() as AgreementState
-
-            "contains the mock agreement" using (outputState.agreementDetails == "This is a mock agreement" ) }
-
-        // Verification logic goes here.
-    }
-
     // Used to indicate the transaction's intent.
     interface Commands : CommandData {
         class Create: Commands
         class Agree : Commands
     }
+
+
+    // A transaction is valid if the verify() function of the contract of all the transaction's input and output states
+    // does not throw an exception.
+    override fun verify(tx: LedgerTransaction) {
+
+        val commands = tx.commandsOfType<AgreementContract.Commands>()
+
+        if( commands.size != 1){
+            throw IllegalArgumentException("Transaction must contain exactly one Agreement Contract Command")
+        }
+
+        val command = commands.first()
+
+        when (command.value){
+
+            is Commands.Create -> verifyCreateTransaction(tx, command)
+            is Commands.Agree -> verifyAgreeTransaction(tx, command)
+            else -> throw IllegalArgumentException("Unsupported command ${command.value}")
+        }
+
+        // dummy checks:
+
+//        requireThat {
+//            val outputState: AgreementState = tx.outputStates.single() as AgreementState
+//            "contains the mock agreement" using (outputState.agreementDetails == "This is a mock agreement" )
+//        }
+
+
+
+    }
+
+
+    private fun verifyCreateTransaction(tx: LedgerTransaction, command: Command<Commands>){
+
+        requireThat{
+
+            "There should be no inputs" using (tx.inputStates.isEmpty())
+            "There should be a single output of type AgreementState" using (tx.outputStates.size == 1 && tx.outputStates.first() is AgreementState)
+
+            val output = tx.outputStates.single() as AgreementState
+            "Either party1 or party2 should be signer" using ((command.signers union listOf(output.party1.owningKey, output.party2.owningKey)).isNotEmpty())
+            "AgreementState Status should be DRAFT" using (output.status == AgreementStateStatus.DRAFT)
+
+        }
+
+    }
+
+    private fun verifyAgreeTransaction(tx: LedgerTransaction, command: Command<Commands>){
+
+    }
+
 }

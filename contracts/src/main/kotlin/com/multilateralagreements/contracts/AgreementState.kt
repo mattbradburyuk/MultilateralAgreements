@@ -6,14 +6,17 @@ import net.corda.core.contracts.LinearState
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
+import net.corda.core.serialization.CordaSerializable
 
 // *********
 // * State *
 // *********
+
 @BelongsToContract(AgreementContract::class)
 data class AgreementState(val agreementDetails: String,
                           val party1: Party,
                           val party2: Party,
+                          val status: AgreementStateStatus = AgreementStateStatus.DRAFT,
                           override val linearId : UniqueIdentifier = UniqueIdentifier()
                           ): LinearState {
 
@@ -21,4 +24,6 @@ data class AgreementState(val agreementDetails: String,
 
 }
 
+@CordaSerializable
+enum class AgreementStateStatus{ DRAFT, AGREED}
 

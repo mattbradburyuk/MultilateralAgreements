@@ -3,9 +3,12 @@ package com.multilateralagreements.workflows.tests
 import com.multilateralagreements.workflows.CreateAgreementFlow
 import com.multilateralagreements.workflows.CreateAgreementResponderFlow
 import com.multilateralagreements.contracts.AgreementState
+import com.multilateralagreements.contracts.AgreementStateStatus
 import com.multilateralagreements.workflows.AgreeAgreementFlow
 import com.multilateralagreements.workflows.AgreeAgreementResponderFlow
+import net.corda.core.node.services.Vault
 import net.corda.core.node.services.queryBy
+import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.node.MockNetwork
 import net.corda.testing.node.MockNetworkParameters
@@ -81,14 +84,22 @@ class AgreementContractFlowsTest {
         network.runNetwork()
         val returnedTx2 = future2.getOrThrow()
 
-
         assert(returnedTx2.toLedgerTransaction(a.services).outputs.single().data is AgreementState)
 
-        // todo: add test to check second transaction has been successful
+        // get first transaction output states from b's vault
 
-//        val result = b.services.vaultService.queryBy<AgreementState>()
-//
-//        assert(result.states[0].ref.txhash == returnedTx.id)
+        val tx1OutputStateRef = returnedTx1.coreTransaction.outRef<AgreementState>(0).ref
+        val criteriaTx1 = QueryCriteria.VaultQueryCriteria(stateRefs = listOf(tx1OutputStateRef), status = Vault.StateStatus.ALL)
+        val resultTx1 = b.services.vaultService.queryBy<AgreementState>(criteriaTx1)
+
+        // get second transactions output states from b's vault
+
+        val tx2OutputStateRef = returnedTx2.coreTransaction.outRef<AgreementState>(0).ref
+        val criteriaTx2 = QueryCriteria.VaultQueryCriteria(stateRefs = listOf(tx2OutputStateRef))
+        val resultTx2 = b.services.vaultService.queryBy<AgreementState>(criteriaTx2)
+
+        // check that second tx ouput state is the same as first tx but with updated status
+        assert(resultTx1.states.first().state.data.copy(status = AgreementStateStatus.AGREED) ==  resultTx2.states.first().state.data)
 
     }
 }

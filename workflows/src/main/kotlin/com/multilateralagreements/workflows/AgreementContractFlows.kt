@@ -3,6 +3,7 @@ package com.multilateralagreements.workflows
 import co.paralleluniverse.fibers.Suspendable
 import com.multilateralagreements.contracts.AgreementContract
 import com.multilateralagreements.contracts.AgreementState
+import com.multilateralagreements.contracts.AgreementStateStatus
 import net.corda.core.contracts.TransactionState
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.contracts.requireThat
@@ -108,7 +109,7 @@ class AgreeAgreementFlow(val linearId: UniqueIdentifier, val otherParty: Party):
 
        // create output state
 
-        val outputState = inputState.copy()
+        val outputState = inputState.copy(status = AgreementStateStatus.AGREED)
         val outputTxState = inputTxState.copy(data = outputState)
 
         //create command and signers
