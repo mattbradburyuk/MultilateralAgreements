@@ -177,8 +177,6 @@ class AgreementContractTests {
 
     // Agree Contract Tests
 
-    // todo Agree contract tests
-
     @Test
     fun `agree - input states`(){
 

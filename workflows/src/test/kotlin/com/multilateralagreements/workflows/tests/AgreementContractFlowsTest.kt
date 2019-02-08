@@ -21,7 +21,8 @@ import kotlin.test.assert
 
 class AgreementContractFlowsTest {
 
-    val mockNetworkParameters = MockNetworkParameters(listOf(TestCordapp.findCordapp("com.multilateralagreements.contracts")))
+    val mockNetworkParameters = MockNetworkParameters(listOf(TestCordapp.findCordapp("com.multilateralagreements.contracts"), TestCordapp.findCordapp("com.multilateralagreements.workflows")
+            ))
 
     private val network = MockNetwork(mockNetworkParameters)
 
@@ -48,18 +49,14 @@ class AgreementContractFlowsTest {
     fun `create agreement flow test`() {
 
         val flow = CreateAgreementFlow("This is a mock agreement", partyb)
-
         val future = a.startFlow(flow)
-
         network.runNetwork()
 
         val returnedTx = future.getOrThrow()
-
         assert(returnedTx.toLedgerTransaction(a.services).outputs.single().data is AgreementState)
 
-
+        // check b has the transaction in its vault
         val result = b.services.vaultService.queryBy<AgreementState>()
-
         assert(result.states[0].ref.txhash == returnedTx.id)
 
     }
@@ -77,7 +74,7 @@ class AgreementContractFlowsTest {
         val state = returnedTx1.coreTransaction.outputStates.first() as AgreementState
         val linearId = state.linearId
 
-        // agree
+        // agree transaction
 
         val flow2 = AgreeAgreementFlow(linearId, partyb)
         val future2 = a.startFlow(flow2)
@@ -98,7 +95,7 @@ class AgreementContractFlowsTest {
         val criteriaTx2 = QueryCriteria.VaultQueryCriteria(stateRefs = listOf(tx2OutputStateRef))
         val resultTx2 = b.services.vaultService.queryBy<AgreementState>(criteriaTx2)
 
-        // check that second tx ouput state is the same as first tx but with updated status
+        // check that second tx output state is the same as first tx but with updated status
         assert(resultTx1.states.first().state.data.copy(status = AgreementStateStatus.AGREED) ==  resultTx2.states.first().state.data)
 
     }
