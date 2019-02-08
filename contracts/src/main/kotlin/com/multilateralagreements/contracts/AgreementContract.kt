@@ -65,12 +65,38 @@ class AgreementContract : Contract {
             val output = tx.outputStates.single() as AgreementState
             "Either party1 or party2 should be signer" using ((command.signers union listOf(output.party1.owningKey, output.party2.owningKey)).isNotEmpty())
             "AgreementState Status should be DRAFT" using (output.status == AgreementStateStatus.DRAFT)
-
         }
-
     }
 
     private fun verifyAgreeTransaction(tx: LedgerTransaction, command: Command<Commands>){
+
+
+        // remember - there will be other input states not just AgreementStates.
+
+        requireThat {
+
+            // AgreementState inputs
+            val agreementStateInputs = tx.inputsOfType<AgreementState>()
+            "There should be one input state of type AgreementState" using (agreementStateInputs.size == 1)
+
+            val agreementStateInput = agreementStateInputs.single()
+            "Input AgreementState should have status DRAFT" using(agreementStateInput.status == AgreementStateStatus.DRAFT)
+
+            // AgreementState outputs
+
+            "There should be one output state of type AgreementState" using (true)
+            "Output AgreementState should have status AGREE" using (true)
+
+
+            // Signatures
+
+            "Both party1 and party2 must sign the transaction" using (true)
+
+            // Todo: Add proposal and agree state requirements
+
+        }
+
+
 
     }
 

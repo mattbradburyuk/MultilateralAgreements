@@ -134,5 +134,37 @@ class AgreementContractTests {
 
     // todo Agree contract tests
 
+    @Test
+    fun `agree - input states`(){
+
+        // Todo: redo these tests for updated verify
+
+        ledgerServices.ledger {
+            transaction{
+                input(AgreementContract.ID, mockAgreementState)
+                output(AgreementContract.ID, mockAgreementState_3)
+                this.verifies()
+            }
+            transaction{
+                input(AgreementContract.ID, mockAgreementState)
+                input(AgreementContract.ID, mockAgreementState_2)
+                output(AgreementContract.ID, mockAgreementState_3)
+                this.failsWith("There should be one input state of type AgreementState")
+            }
+            transaction{
+                input(AgreementContract.ID, mockAgreementState_3)
+                output(AgreementContract.ID, mockAgreementState_3)
+                this.failsWith("There should be one input state of type AgreementState with status DRAFT")
+            }
+
+
+
+
+        }
+
+
+
+    }
+
 
 }
