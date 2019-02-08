@@ -5,6 +5,8 @@ package com.multilateralagreements.contracts.tests
 import com.multilateralagreements.contracts.AgreementContract
 import com.multilateralagreements.contracts.AgreementState
 import com.multilateralagreements.contracts.AgreementStateStatus
+import net.corda.core.contracts.Command
+import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.ContractState
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.CordaX500Name
@@ -44,6 +46,50 @@ class AgreementContractTests {
         override val participants: List<AbstractParty> = listOf(party)
     }
 
+    interface TestCommands : CommandData {
+        class dummyCommand: TestCommands
+    }
+
+
+    @Test
+    fun `valid commands`(){
+
+        ledgerServices.ledger {
+
+            transaction {
+                output(AgreementContract.ID, mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+            // include non Agreement command
+            transaction {
+                output(AgreementContract.ID, mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                command(party1.publicKey, TestCommands.dummyCommand())
+                this.verifies()
+            }
+            //  no Agreement command
+            transaction {
+                output(AgreementContract.ID, mockAgreementState)
+                command(party1.publicKey, TestCommands.dummyCommand())
+                this.failsWith("Transaction must contain exactly one Agreement Contract Command")
+            }
+            // include 2 Agreement command
+            transaction {
+                output(AgreementContract.ID, mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                command(party2.publicKey, AgreementContract.Commands.Create())
+                this.failsWith("Transaction must contain exactly one Agreement Contract Command")
+            }
+            // include 2 Agreement command
+            transaction {
+                output(AgreementContract.ID, mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                command(party2.publicKey, AgreementContract.Commands.Agree())
+                this.failsWith("Transaction must contain exactly one Agreement Contract Command")
+            }
+        }
+    }
 
     // create contract Tests
 
@@ -129,7 +175,6 @@ class AgreementContractTests {
         }
     }
 
-
     // Agree Contract Tests
 
     // todo Agree contract tests
@@ -137,34 +182,116 @@ class AgreementContractTests {
     @Test
     fun `agree - input states`(){
 
-        // Todo: redo these tests for updated verify
-
         ledgerServices.ledger {
             transaction{
                 input(AgreementContract.ID, mockAgreementState)
                 output(AgreementContract.ID, mockAgreementState_3)
+                command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
                 this.verifies()
             }
+            // no input
+            transaction{
+                output(AgreementContract.ID, mockAgreementState_3)
+                command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
+                this.failsWith("There should be one input state of type AgreementState")
+            }
+            // two inputs
             transaction{
                 input(AgreementContract.ID, mockAgreementState)
                 input(AgreementContract.ID, mockAgreementState_2)
                 output(AgreementContract.ID, mockAgreementState_3)
+                command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
                 this.failsWith("There should be one input state of type AgreementState")
             }
+            // wrong state
+            transaction{
+                input(AgreementContract.ID, DummyState(party1.party))
+                output(AgreementContract.ID, mockAgreementState_3)
+                command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
+                this.failsWith("There should be one input state of type AgreementState")
+            }
+            // wrong status
             transaction{
                 input(AgreementContract.ID, mockAgreementState_3)
                 output(AgreementContract.ID, mockAgreementState_3)
-                this.failsWith("There should be one input state of type AgreementState with status DRAFT")
+                command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
+                this.failsWith("Input AgreementState should have status DRAFT")
             }
-
-
-
-
         }
-
-
-
     }
 
+    @Test
+    fun `agree - output states`(){
 
+        ledgerServices.ledger {
+            transaction {
+                input(AgreementContract.ID, mockAgreementState)
+                output(AgreementContract.ID, mockAgreementState_3)
+                command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
+                this.verifies()
+            }
+            // no output
+            transaction {
+                input(AgreementContract.ID, mockAgreementState)
+                command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
+                this.failsWith("There should be one output state of type AgreementState")
+            }
+            // two outputs
+            transaction {
+                input(AgreementContract.ID, mockAgreementState)
+                output(AgreementContract.ID, mockAgreementState_3)
+                output(AgreementContract.ID, mockAgreementState_3)
+                command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
+                this.failsWith("There should be one output state of type AgreementState")
+            }
+            // wrong state type
+            transaction {
+                input(AgreementContract.ID, mockAgreementState)
+                output(AgreementContract.ID, DummyState(party1.party))
+                command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
+                this.failsWith("There should be one output state of type AgreementState")
+            }
+            // wrong status
+            transaction {
+                input(AgreementContract.ID, mockAgreementState)
+                output(AgreementContract.ID, mockAgreementState_2)
+                command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
+                this.failsWith("Output AgreementState should have status AGREE")
+            }
+        }
+    }
+
+    @Test
+    fun `agree - signatures`(){
+
+        ledgerServices.ledger {
+            transaction {
+                input(AgreementContract.ID, mockAgreementState)
+                output(AgreementContract.ID, mockAgreementState_3)
+                command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
+                this.verifies()
+            }
+            // swap signature order
+            transaction {
+                input(AgreementContract.ID, mockAgreementState)
+                output(AgreementContract.ID, mockAgreementState_3)
+                command(listOf(party2.publicKey, party1.publicKey), AgreementContract.Commands.Agree())
+                this.verifies()
+            }
+            // missing signature
+            transaction {
+                input(AgreementContract.ID, mockAgreementState)
+                output(AgreementContract.ID, mockAgreementState_3)
+                command(listOf(party2.publicKey), AgreementContract.Commands.Agree())
+                this.failsWith("Both party1 and party2 must sign the transaction")
+            }
+            // double signature
+            transaction {
+                input(AgreementContract.ID, mockAgreementState)
+                output(AgreementContract.ID, mockAgreementState_3)
+                command(listOf(party2.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
+                this.failsWith("Both party1 and party2 must sign the transaction")
+            }
+        }
+    }
 }

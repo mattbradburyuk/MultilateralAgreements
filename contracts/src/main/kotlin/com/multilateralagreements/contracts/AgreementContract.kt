@@ -6,6 +6,7 @@ import net.corda.core.contracts.CommandData
 import net.corda.core.contracts.Contract
 import net.corda.core.contracts.requireThat
 import net.corda.core.transactions.LedgerTransaction
+import java.security.PublicKey
 
 // ************
 // * Contract *
@@ -76,6 +77,7 @@ class AgreementContract : Contract {
         requireThat {
 
             // AgreementState inputs
+
             val agreementStateInputs = tx.inputsOfType<AgreementState>()
             "There should be one input state of type AgreementState" using (agreementStateInputs.size == 1)
 
@@ -84,13 +86,15 @@ class AgreementContract : Contract {
 
             // AgreementState outputs
 
-            "There should be one output state of type AgreementState" using (true)
-            "Output AgreementState should have status AGREE" using (true)
+            val agreementStateOuputs= tx.outputsOfType<AgreementState>()
+            "There should be one output state of type AgreementState" using (agreementStateOuputs.size ==1)
+            val agreementStateOutput = agreementStateOuputs.single()
+            "Output AgreementState should have status AGREE" using (agreementStateOutput.status == AgreementStateStatus.AGREED)
 
 
             // Signatures
 
-            "Both party1 and party2 must sign the transaction" using (true)
+            "Both party1 and party2 must sign the transaction" using (setOf<PublicKey>(agreementStateInput.party1.owningKey, agreementStateInput.party2.owningKey) == command.signers.toSet())
 
             // Todo: Add proposal and agree state requirements
 
