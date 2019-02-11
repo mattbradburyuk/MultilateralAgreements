@@ -14,6 +14,7 @@ import java.time.Instant
 // *********
 @BelongsToContract(ProposalContract::class)
 data class ProposalState(
+        val priorState: ContractState,
         val proposedState: ContractState,
         val expiryTime: Instant,
         val proposer: Party,
@@ -21,21 +22,18 @@ data class ProposalState(
 
 ): ContractState {
 
-    override val participants: List<AbstractParty> = listOf()
+    override val participants: List<AbstractParty> = (responders.union(listOf(proposer)).toList())
+
+    val hashpriorState = getHashForState(priorState)
+    val hashProposedState = getHashForState(proposedState)
 
 
-    // Is this the right way to do this??
-    val hashProposedState = SecureHash.SHA256(proposedState.toString().toByteArray())
 
-
-    // Is this the right place for this utility
-    fun getHashForState(state: ContractState): SecureHash.SHA256{
-
-        return SecureHash.SHA256( state.toString().toByteArray())
-
-    }
 
 }
 
 
-
+// Is this the right place for this utility
+fun getHashForState(state: ContractState): SecureHash.SHA256{
+    return SecureHash.sha256( state.toString())
+}
