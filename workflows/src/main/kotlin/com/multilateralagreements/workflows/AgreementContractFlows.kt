@@ -21,6 +21,8 @@ import net.corda.core.utilities.ProgressTracker
 
 // Create Agreement flows
 
+// todo: work out how to run this from corda shell
+
 @InitiatingFlow
 @StartableByRPC
 class CreateAgreementFlow(val agreement: String, val otherParty: Party): FlowLogic<SignedTransaction>(){
