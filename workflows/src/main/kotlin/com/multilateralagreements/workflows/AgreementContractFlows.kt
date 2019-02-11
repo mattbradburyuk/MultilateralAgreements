@@ -21,7 +21,14 @@ import net.corda.core.utilities.ProgressTracker
 
 // Create Agreement flows
 
-// todo: work out how to run this from corda shell
+// Corda shell commands:
+
+// >>> flow start CreateAgreementFlow agreement: This is an agreement between party A and B, otherParty: "O=PartyB,L=New York,C=US"
+// >>> run vaultQuery contractStateType: com.multilateralagreements.contracts.AgreementState
+// >>> flow start AgreeAgreementFlow linearId: <linearId>, otherParty: "O=PartyB,L=New York,C=US"
+
+
+
 
 @InitiatingFlow
 @StartableByRPC

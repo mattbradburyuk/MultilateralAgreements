@@ -137,5 +137,11 @@ task deployNodes(type: net.corda.plugins.Cordform, dependsOn: ['jar']) {
                 "$project.group:workflows:$project.version"
         ]
         rpcUsers = [[ user: "user1", "password": "test", "permissions": ["ALL"]]]
+        extraConfig = [
+                // Setting the JMX reporter type.
+                jmxReporterType: 'JOLOKIA',
+                // Setting the H2 address.
+                h2Settings: [ address: 'localhost:0' ]
+        ]
     }
 }
