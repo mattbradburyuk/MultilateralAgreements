@@ -14,7 +14,7 @@ import java.time.Instant
 @BelongsToContract(ProposalContract::class)
 data class ProposalState(
         val currentState: ContractState,
-        // todo change proposedState to CandidateState
+        // todo change proposedState to candidateState
         val proposedState: ContractState,
         val expiryTime: Instant,
         val proposer: Party,
