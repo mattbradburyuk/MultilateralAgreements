@@ -1,6 +1,5 @@
 package com.multilateralagreements.contracts
 
-
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.ContractState
 import net.corda.core.crypto.SecureHash
@@ -12,10 +11,9 @@ import java.time.Instant
 // * State *
 // *********
 @BelongsToContract(ProposalContract::class)
-data class ProposalState(
-        val currentState: ContractState,
-        // todo change proposedState to CandidateState
-        val proposedState: ContractState,
+data class ReadyState(
+        val owner: Party,
+        val proposalState: ContractState,
         val expiryTime: Instant,
         val proposer: Party,
         val responders: List<Party>
@@ -24,13 +22,6 @@ data class ProposalState(
 
     override val participants: List<AbstractParty> = (responders.union(listOf(proposer)).toList())
 
-    val hashCurrentState = getHashForState(currentState)
-    val hashProposedState = getHashForState(proposedState)
+    val hashProposalState = getHashForState(proposalState)
 
-}
-
-
-// Is this the right place for this utility
-fun getHashForState(state: ContractState): SecureHash.SHA256{
-    return SecureHash.sha256( state.toString())
 }
