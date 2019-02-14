@@ -25,55 +25,55 @@ import java.time.Instant
 
 // Corda shell commands: todo: corda shell commands
 
-@InitiatingFlow
-@StartableByRPC
-class CreateProposalFlow(val linearId: UniqueIdentifier,
-                         val proposedState: ContractState,
-                         val expiryTime: Instant,
-                         val responders: List<Party>
-                         ): FlowLogic<SignedTransaction>(){
-
-
-    @Suspendable
-    override fun call(): SignedTransaction {
-
-        // find ref state
-
-        val criteria = QueryCriteria.LinearStateQueryCriteria(linearId = listOf(linearId))
-        val result = serviceHub.vaultService.queryBy<AgreementState>(criteria)
-        val currentStateAndRef = result.states.first()
-        val currentTxState = currentStateAndRef.state
-        val currentState = currentTxState.data
-
-        // create output state
-
-        val me = serviceHub.myInfo.legalIdentities.first()
-        val outputState = ProposalState(currentState, proposedState, expiryTime, me, responders)
-
-        // create command and signers
-
-        val command = ProposalContract.Commands.Propose()
-        val signers = me
-
-        // build transaction
-
-        val txBuilder = TransactionBuilder()
-
-        val notary = serviceHub.networkMapCache.notaryIdentities.first()
-        txBuilder.notary = notary
-
-        // todo: got to here - sort out refernce state reference so it can be added
-
-//        txBuilder.addReferenceState(currentStateAndRef)
-
-
-
-
-    }
-
-
-
-}
+//@InitiatingFlow
+//@StartableByRPC
+//class CreateProposalFlow(val linearId: UniqueIdentifier,
+//                         val candidateState: ContractState,
+//                         val expiryTime: Instant,
+//                         val responders: List<Party>
+//                         ): FlowLogic<SignedTransaction>(){
+//
+//
+//    @Suspendable
+//    override fun call(): SignedTransaction {
+//
+//        // find ref state
+//
+//        val criteria = QueryCriteria.LinearStateQueryCriteria(linearId = listOf(linearId))
+//        val result = serviceHub.vaultService.queryBy<AgreementState>(criteria)
+//        val currentStateAndRef = result.states.first()
+//        val currentTxState = currentStateAndRef.state
+//        val currentState = currentTxState.data
+//
+//        // create output state
+//
+//        val me = serviceHub.myInfo.legalIdentities.first()
+//        val outputState = ProposalState(currentState, candidateState, expiryTime, me, responders)
+//
+//        // create command and signers
+//
+//        val command = ProposalContract.Commands.Propose()
+//        val signers = me
+//
+//        // build transaction
+//
+//        val txBuilder = TransactionBuilder()
+//
+//        val notary = serviceHub.networkMapCache.notaryIdentities.first()
+//        txBuilder.notary = notary
+//
+//        // todo: got to here - sort out refernce state reference so it can be added
+//
+////        txBuilder.addReferenceState(currentStateAndRef)
+//
+//
+//
+//
+//    }
+//
+//
+//
+//}
 
 
 // todo: CreateProposalResponderFlow

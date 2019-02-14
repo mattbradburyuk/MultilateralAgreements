@@ -507,7 +507,7 @@ class ProposalContractTests(){
     }
 
     @Test
-    fun `Consent - signers`(){
+    fun `consent - signers`(){
 
         val proposalState = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
         val readyState = ReadyState(party2.party, proposalState, Instant.now(), proposalState.proposer, proposalState.responders )

@@ -14,8 +14,7 @@ import java.time.Instant
 @BelongsToContract(ProposalContract::class)
 data class ProposalState(
         val currentState: ContractState,
-        // todo change proposedState to candidateState
-        val proposedState: ContractState,
+        val candidateState: ContractState,
         val expiryTime: Instant,
         val proposer: Party,
         val responders: List<Party>
@@ -25,7 +24,7 @@ data class ProposalState(
     override val participants: List<AbstractParty> = (responders.union(listOf(proposer)).toList())
 
     val hashCurrentState = getHashForState(currentState)
-    val hashProposedState = getHashForState(proposedState)
+    val hashCandidateState = getHashForState(candidateState)
 
 }
 
