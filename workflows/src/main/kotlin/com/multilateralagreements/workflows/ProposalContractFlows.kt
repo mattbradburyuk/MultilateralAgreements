@@ -74,3 +74,19 @@ class CreateProposalFlow(val linearId: UniqueIdentifier,
 
 
 }
+
+
+// todo: CreateProposalResponderFlow
+
+
+// todo: FinaliseProposalFlow -> goes to AgreeementFLow - or is it a subflow
+
+// todo: CancelProposalFlow
+// todo: CancelProposalResponderFlow
+
+
+// todo: ConsentFlow
+// todo: ConsentFlowResponder
+
+// todo: RevokeConsentFlow
+// todo: RevokeConsentResponderFlow
