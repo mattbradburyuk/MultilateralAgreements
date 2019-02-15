@@ -25,76 +25,70 @@ import java.time.Instant
 // Corda shell commands: todo: corda shell commands
 
 
-//@InitiatingFlow
-//@StartableByRPC
-//class CreateProposalFlow(val linearId: UniqueIdentifier,
-//                         val candidateState: ContractState,
-//                         val expiryTime: Instant,
-//                         val responders: List<Party>
-//                         ): FlowLogic<SignedTransaction>(){
-//
-//
-//    @Suspendable
-//    override fun call(): SignedTransaction {
-//
-//        // find ref state
-//
-//        val criteria = QueryCriteria.LinearStateQueryCriteria(linearId = listOf(linearId))
-//        val result = serviceHub.vaultService.queryBy<AgreementState>(criteria)
-//        val currentStateAndRef = result.states.first()
-//        val currentTxState = currentStateAndRef.state
-//        val currentState = currentTxState.data
-//
-//
-//        // create output state
-//
-//        val me = serviceHub.myInfo.legalIdentities.first()
-//        val outputState = ProposalState(currentState, candidateState, expiryTime, me, responders)
-//
-//        // create command and signers
-//
-//        val command = ProposalContract.Commands.Propose()
-//        val signers = me
-//
-//        // build transaction
-//
-//        val txBuilder = TransactionBuilder()
-//
-//        val notary = serviceHub.networkMapCache.notaryIdentities.first()
-//        txBuilder.notary = notary
-//
-//        txBuilder.addReferenceState(ReferencedStateAndRef(currentStateAndRef))
-//        txBuilder.addOutputState(outputState)
-//        txBuilder.addCommand(command, me.owningKey)
-//
-//        // verify
-//
-//        txBuilder.verify(serviceHub)
-//
-//        // sign
-//
-//        val stx = serviceHub.signInitialTransaction(txBuilder)
-//
-//        val sessions = mutableListOf<FlowSession>()
-//
-//        responders.forEach { sessions.add(initiateFlow(it)) }
-//
-//        val ftx = subFlow(FinalityFlow(stx,sessions))
-//
-//        return ftx
-//
-//    }
-//}
-//
-//@InitiatedBy(CreateProposalFlow::class)
-//class CreateProposalResponderFlow(val otherPartySession: FlowSession): FlowLogic<SignedTransaction>(){
-//
-//    @Suspendable
-//    override fun call(): SignedTransaction{
-//
-//        return subFlow(ReceiveFinalityFlow(otherPartySession))
-//    }
-//}
+@InitiatingFlow
+@StartableByRPC
+class CreateProposalFlow(val currentStateStaticPointer: StaticPointer<AgreementState>,
+                         val candidateState: ContractState,
+                         val expiryTime: Instant,
+                         val responders: List<Party>
+                         ): FlowLogic<SignedTransaction>(){
+
+
+    @Suspendable
+    override fun call(): SignedTransaction {
+
+
+        val currentStateAndRef = currentStateStaticPointer.resolve(serviceHub)
+
+        // create output state
+
+        val me = serviceHub.myInfo.legalIdentities.first()
+        val outputState = ProposalState(currentStateStaticPointer, candidateState, expiryTime, me, responders)
+
+        // create command and signers
+
+        val command = ProposalContract.Commands.Propose()
+        val signers = me
+
+        // build transaction
+
+        val txBuilder = TransactionBuilder()
+
+        val notary = serviceHub.networkMapCache.notaryIdentities.first()
+        txBuilder.notary = notary
+
+        txBuilder.addReferenceState(ReferencedStateAndRef(currentStateAndRef))
+        txBuilder.addOutputState(outputState)
+        txBuilder.addCommand(command, me.owningKey)
+
+        // verify
+
+        txBuilder.verify(serviceHub)
+
+        // sign
+
+        val stx = serviceHub.signInitialTransaction(txBuilder)
+
+        val sessions = mutableListOf<FlowSession>()
+
+        responders.forEach { sessions.add(initiateFlow(it)) }
+
+        val ftx = subFlow(FinalityFlow(stx,sessions))
+
+        return ftx
+
+    }
+}
+
+@InitiatedBy(CreateProposalFlow::class)
+class CreateProposalResponderFlow(val otherPartySession: FlowSession): FlowLogic<SignedTransaction>(){
+
+    @Suspendable
+    override fun call(): SignedTransaction{
+
+        return subFlow(ReceiveFinalityFlow(otherPartySession))
+    }
+}
 
 // todo: FinaliseProposalFlow -> goes to AgreeementFLow - or is it a subflow
 
@@ -148,6 +142,8 @@ import java.time.Instant
 // todo: RevokeConsentResponderFlow
 
 // these could be written by the Services layer, but doing as Flows here
+
+// todo: get stateRef from transaction??
 
 // todo: Get Proposals for AgreementState linearId
 /// todo: Get ReadyStates for Agreement LinearId

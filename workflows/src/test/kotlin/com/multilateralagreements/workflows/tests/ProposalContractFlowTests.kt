@@ -6,9 +6,13 @@ import com.multilateralagreements.contracts.ProposalState
 import com.multilateralagreements.workflows.AgreeAgreementResponderFlow
 import com.multilateralagreements.workflows.CreateAgreementFlow
 import com.multilateralagreements.workflows.CreateAgreementResponderFlow
+import com.multilateralagreements.workflows.CreateProposalFlow
+import net.corda.core.contracts.StateRef
+import net.corda.core.contracts.StaticPointer
 //import com.multilateralagreements.workflows.CreateProposalFlow
 import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.QueryCriteria
+import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.node.MockNetwork
@@ -50,7 +54,7 @@ class ProposalContractFlowsTests {
 
     @After
     fun tearDown() = network.stopNodes()
-/*
+
     @Test
     fun `create proposal flow test`() {
 
@@ -59,32 +63,31 @@ class ProposalContractFlowsTests {
         val flow = CreateAgreementFlow("This is a mock agreement", partyb)
         val future = a.startFlow(flow)
         network.runNetwork()
-
-
-        // get the AgreementState from the transaction and create the ProposalState
-
         val returnedTx = future.getOrThrow()
 
-        val currentState = returnedTx.toLedgerTransaction(a.services).outputs.single().data as AgreementState
-        val linearId = currentState.linearId
+        // get the currentState and pointer from the transaction and create the ProposalState
+
+        val currentStateRef = StateRef(returnedTx.id, 0)
+        val currentStateStaticPointer = StaticPointer<AgreementState>(currentStateRef, AgreementState::class.java)
+        val currentState = currentStateStaticPointer.resolve(a.services).state.data
 
         val candidateState = AgreementState("This is a modified mock Agreement",
                 partya,
                 partyb,
                 status = AgreementStateStatus.AGREED,
-                linearId = linearId)
+                linearId = currentState.linearId)
 
         // CreateProposalFlow
 
-        val flow2 = CreateProposalFlow(linearId, candidateState, Instant.MAX, listOf(partyb))
+        val flow2 = CreateProposalFlow(currentStateStaticPointer, candidateState, Instant.MAX, listOf(partyb))
         val future2 = a.startFlow(flow2)
         network.runNetwork()
-
         val returnedTx2 = future2.getOrThrow()
 
         // check state return from the flow is the correct type
 
         assert(returnedTx2.toLedgerTransaction(a.services).outputs.single().data is ProposalState)
+
 
         // get propose transactions output states from b's vault
 
@@ -99,6 +102,7 @@ class ProposalContractFlowsTests {
 
     }
 
+/*
     @Test
     fun `consent flow test`() {
 
@@ -150,8 +154,8 @@ class ProposalContractFlowsTests {
 
 
     }
-
 */
+
 
 
 }
