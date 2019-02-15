@@ -4,6 +4,7 @@ package com.multilateralagreements.contracts
 import net.corda.core.contracts.BelongsToContract
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StatePointer
+import net.corda.core.contracts.StaticPointer
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
@@ -19,8 +20,7 @@ import java.time.Instant
 @BelongsToContract(ProposalContract::class)
 data class ProposalState(
 
-//        val currentStatePointer: StatePointer<AgreementState>,
-        val currentState: ContractState,
+        val currentStatePointer: StaticPointer<AgreementState>,
         val candidateState: ContractState,
         val expiryTime: Instant,
         val proposer: Party,
@@ -30,8 +30,8 @@ data class ProposalState(
 
     override val participants: List<AbstractParty> = (responders.union(listOf(proposer)).toList())
 
-    val hashCurrentState = getHashForState(currentState)
-    val hashCandidateState = getHashForState(candidateState)
+//    val hashCurrentState = getHashForState(currentState)
+//    val hashCandidateState = getHashForState(candidateState)
 
 }
 

@@ -1,17 +1,10 @@
 package com.multilateralagreements.contracts.tests
 
 import com.multilateralagreements.contracts.*
-import net.corda.core.contracts.BelongsToContract
-import net.corda.core.contracts.CommandData
-import net.corda.core.contracts.Contract
-import net.corda.core.contracts.ContractState
-import net.corda.core.identity.AbstractParty
+import net.corda.core.contracts.*
 import net.corda.core.identity.CordaX500Name
-import net.corda.core.identity.Party
-import net.corda.core.node.NetworkParameters
-import net.corda.core.transactions.LedgerTransaction
+import net.corda.serialization.internal.model.PropertyName
 import net.corda.testing.common.internal.testNetworkParameters
-import net.corda.testing.contracts.DummyContract
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.node.MockServices
 import net.corda.testing.node.ledger
@@ -49,62 +42,47 @@ class ProposalContractTests(){
 
 
 
-//    interface TestCommands : CommandData {
-//        class dummyCommand: TestCommands
-//    }
-
-//    @Test
-//    fun `dummy test`() {
-//
-//        val refState = mockAgreementState
-//        val hashRefState = getHashForState(refState)
-//        val state = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-//
-//        ledgerServices.ledger {
-//
-//            transaction {
-//                output(AgreementContract.ID, mockAgreementState)
-//                command(party1.publicKey, AgreementContract.Commands.Create())
-//                this.verifies()
-//            }
-//            transaction {
-//                reference(AgreementContract.ID, mockAgreementState)
-//                output(ProposalContract.ID, state)
-//                command(party1.publicKey, ProposalContract.Commands.Propose())
-//
-//                this.verifies()
-//            }
-//
-//        }
-//    }
-
     // todo: add extra dummy states as outputs input to test filtering out of proposal states
+
 
     @Test
     fun `one proposalContract command only`(){
 
-        val state = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+// todo: work out how to do unit tests involving reference states
 
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                output(ProposalContract.ID, state)
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+
+            // check verifies
+            transaction {
+                reference("AgreementState Label")
+                output(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Propose())
                 this.verifies()
             }
             // two commands - same
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                output(ProposalContract.ID, state)
+                reference("AgreementState Label")
+                output(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Propose())
                 command(party2.publicKey, ProposalContract.Commands.Propose())
                 this.failsWith("There should be exactly one Propose Contract command")
             }
             // two commands, but different
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                output(ProposalContract.ID, state)
+                reference("AgreementState Label")
+                output(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Propose())
                 command(party2.publicKey, ProposalContract.Commands.Finalise())
                 this.failsWith("There should be exactly one Propose Contract command")
@@ -115,21 +93,32 @@ class ProposalContractTests(){
     @Test
     fun `propose - no inputs`(){
 
-        val state = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                output(ProposalContract.ID, state)
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+
+            // check verifies
+            transaction {
+                reference("AgreementState Label")
+                output(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Propose())
                 this.verifies()
             }
             // one input
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
-                output(ProposalContract.ID, state)
+                reference("AgreementState Label")
+                input(ProposalContract.ID, proposalState)
+                output(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Propose())
                 this.failsWith("There should be no ProposalState inputs")
             }
@@ -139,21 +128,32 @@ class ProposalContractTests(){
     @Test
     fun `propose - outputs`(){
 
-        val state = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                output(ProposalContract.ID, state)
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+
+            // check verifies
+            transaction {
+                reference("AgreementState Label")
+                output(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Propose())
                 this.verifies()
             }
             // two outputs
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                output(ProposalContract.ID, state)
-                output(ProposalContract.ID, state)
+                reference("AgreementState Label")
+                output(ProposalContract.ID, proposalState)
+                output(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Propose())
                 this.failsWith("There should be a single output of type ProposalState")
             }
@@ -163,36 +163,47 @@ class ProposalContractTests(){
     @Test
     fun `propose - reference states`(){
 
-        val state = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                output(ProposalContract.ID, state)
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+
+            // check verifies
+            transaction {
+                reference("AgreementState Label")
+                output(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Propose())
                 this.verifies()
             }
             // no reference state
             transaction {
-                output(ProposalContract.ID, state)
+                output(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Propose())
                 this.failsWith("There should be one existing AgreementState as a reference state")
             }
             // two reference state
             transaction {
+                reference("AgreementState Label")
                 reference(AgreementContract.ID, mockAgreementState)
-                reference(AgreementContract.ID, mockAgreementState)
-                output(ProposalContract.ID, state)
+                output(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Propose())
                 this.failsWith("There should be one existing AgreementState as a reference state")
             }
-            // reference state doesn't match hash in ProposalState
+            // reference state doesn't match currentStatePointer
             transaction {
                 reference(AgreementContract.ID, mockAgreementState_2)
-                output(ProposalContract.ID, state)
+                output(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Propose())
-                this.failsWith("hashCurrentState must equal the sha256 hash of the referenced AgreementState")
+                this.fails()
             }
         }
     }
@@ -200,33 +211,44 @@ class ProposalContractTests(){
     @Test
     fun `propose - signers`() {
 
-        val state = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                output(ProposalContract.ID, state)
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+
+            // check verifies
+            transaction {
+                reference("AgreementState Label")
+                output(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Propose())
                 this.verifies()
             }
             // proposer and responder sign
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                output(ProposalContract.ID, state)
+                reference("AgreementState Label")
+                output(ProposalContract.ID, proposalState)
                 command(listOf(party1.publicKey,party2.publicKey), ProposalContract.Commands.Propose())
                 this.verifies()
             }
             // responder signs but not proposer
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                output(ProposalContract.ID, state)
+                reference("AgreementState Label")
+                output(ProposalContract.ID, proposalState)
                 command(party2.publicKey, ProposalContract.Commands.Propose())
                 this.failsWith("Proposer should sign the transaction")
             }
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                output(ProposalContract.ID, state)
+                reference("AgreementState Label")
+                output(ProposalContract.ID, proposalState)
                 command(otherIdentity.publicKey, ProposalContract.Commands.Propose())
                 this.failsWith("Proposer should sign the transaction")
             }
@@ -236,28 +258,36 @@ class ProposalContractTests(){
     @Test
     fun `finalise - inputs`(){
 
-        val state = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+
+            // check verifies
+            transaction {
+                input(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Finalise())
                 this.verifies()
             }
             // two inputs
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
-                input(ProposalContract.ID, state)
+                input(ProposalContract.ID, proposalState)
+                input(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Finalise())
                 this.failsWith("There should be a single ProposalState inputs")
             }
             // non ProposalState input + proposal state
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
+                input(ProposalContract.ID, proposalState)
                 input(MockContract.ID, MockState(party1.party))
                 command(party1.publicKey, ProposalContract.Commands.Finalise())
                 this.verifies()
@@ -268,29 +298,37 @@ class ProposalContractTests(){
     @Test
     fun `finalise - outputs`(){
 
-        val state = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+
+            // check verifies
+            transaction {
+                input(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Finalise())
                 this.verifies()
             }
             // non ProposalState output state
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
+                input(ProposalContract.ID, proposalState)
                 output(MockContract.ID,MockState(party1.party) )
                 command(party1.publicKey, ProposalContract.Commands.Finalise())
                 this.verifies()
             }
             // ProposalState output
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
-                output(ProposalContract.ID, state)
+                input(ProposalContract.ID, proposalState)
+                output(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Finalise())
                 this.failsWith("There should no output of type ProposalState")
             }
@@ -302,20 +340,36 @@ class ProposalContractTests(){
     @Test
     fun `finalise - signatures`(){
 
-        val state = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party, party3.party))
-
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+
+            // check verifies
+            transaction {
+                input(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Finalise())
+                this.verifies()
+            }
+            // responder signs
+            transaction {
+                input(ProposalContract.ID, proposalState)
+                command(party2.publicKey, ProposalContract.Commands.Finalise())
                 this.verifies()
             }
             // signer not in proposer/responder
             transaction {
                 reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
+                input(ProposalContract.ID, proposalState)
                 command(otherIdentity.publicKey, ProposalContract.Commands.Finalise())
                 this.failsWith("The proposer or any responder should sign the transaction")
             }
@@ -325,28 +379,36 @@ class ProposalContractTests(){
     @Test
     fun `cancel - inputs`(){
 
-        val state = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
-                command(party1.publicKey, ProposalContract.Commands.Cancel())
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+
+            // check verifies
+            transaction {
+                input(ProposalContract.ID, proposalState)
+                command(party1.publicKey, ProposalContract.Commands.Finalise())
                 this.verifies()
             }
             // two inputs
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
-                input(ProposalContract.ID, state)
+                input(ProposalContract.ID, proposalState)
+                input(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Cancel())
                 this.failsWith("There should be a single ProposalState inputs")
             }
             // non ProposalState input + proposal state
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
+                input(ProposalContract.ID, proposalState)
                 input(MockContract.ID, MockState(party1.party))
                 command(party1.publicKey, ProposalContract.Commands.Cancel())
                 this.verifies()
@@ -357,20 +419,30 @@ class ProposalContractTests(){
     @Test
     fun `cancel - outputs`(){
 
-        val state = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
-                command(party1.publicKey, ProposalContract.Commands.Cancel())
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+
+            // check verifies
+            transaction {
+                input(ProposalContract.ID, proposalState)
+                command(party1.publicKey, ProposalContract.Commands.Finalise())
                 this.verifies()
             }
             // non ProposalState output state
             transaction {
                 reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
+                input(ProposalContract.ID, proposalState)
                 output(MockContract.ID,MockState(party1.party) )
                 command(party1.publicKey, ProposalContract.Commands.Cancel())
                 this.verifies()
@@ -378,8 +450,8 @@ class ProposalContractTests(){
             // ProposalState output
             transaction {
                 reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
-                output(ProposalContract.ID, state)
+                input(ProposalContract.ID, proposalState)
+                output(ProposalContract.ID, proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Cancel())
                 this.failsWith("There should no output of type ProposalState")
             }
@@ -389,27 +461,37 @@ class ProposalContractTests(){
     @Test
     fun `cancel - signatures`(){
 
-        val state = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party, party3.party))
-
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
             transaction {
-                reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
-                command(party1.publicKey, ProposalContract.Commands.Cancel())
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+
+            // check verifies
+            transaction {
+                input(ProposalContract.ID, proposalState)
+                command(party1.publicKey, ProposalContract.Commands.Finalise())
                 this.verifies()
             }
             // signer is a responder
             transaction {
                 reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
+                input(ProposalContract.ID, proposalState)
                 command(otherIdentity.publicKey, ProposalContract.Commands.Cancel())
                 this.failsWith("The proposer should sign the transaction")
             }
             // signer is not proposer or responder
             transaction {
                 reference(AgreementContract.ID, mockAgreementState)
-                input(ProposalContract.ID, state)
+                input(ProposalContract.ID, proposalState)
                 command(otherIdentity.publicKey, ProposalContract.Commands.Cancel())
                 this.failsWith("The proposer should sign the transaction")
             }
@@ -420,20 +502,42 @@ class ProposalContractTests(){
     @Test
     fun `consent - no inputs`(){
 
-        val proposalState = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-        val readyState = ReadyState(party2.party, proposalState, Instant.now(), proposalState.proposer, proposalState.responders )
-
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
             transaction {
-                reference(ProposalContract.ID, proposalState)
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+
+            // set up ProposalState on Ledger
+            transaction {
+                reference("AgreementState Label")
+                output(ProposalContract.ID, "ProposalState Label",  proposalState)
+                command(party1.publicKey, ProposalContract.Commands.Propose())
+                this.verifies()
+            }
+
+            val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
+            val proposalStateStaticPointer = StaticPointer<ProposalState>(proposalStateStateAndRef.ref, ProposalState::class.java)
+            val readyState = ReadyState(party2.party, proposalStateStaticPointer, agreementStateStaticPointer, Instant.MAX, proposalState.proposer, proposalState.responders)
+            // check verifies
+            transaction {
+                reference("ProposalState Label")
                 output(ProposalContract.ID, readyState)
                 command(party2.publicKey, ProposalContract.Commands.Consent())
                 this.verifies()
             }
+
             // one input
             transaction {
-                reference(ProposalContract.ID, proposalState)
+                reference("ProposalState Label")
                 input(ProposalContract.ID,readyState)
                 output(ProposalContract.ID, readyState)
                 command(party2.publicKey, ProposalContract.Commands.Consent())
@@ -445,20 +549,41 @@ class ProposalContractTests(){
     @Test
     fun `consent - outputs`(){
 
-        val proposalState = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-        val readyState = ReadyState(party2.party, proposalState, Instant.now(), proposalState.proposer, proposalState.responders )
-
         ledgerServices.ledger {
-
+            // Set up Agreement State on Ledger
             transaction {
-                reference(ProposalContract.ID, proposalState)
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+
+            // set up ProposalState on Ledger
+            transaction {
+                reference("AgreementState Label")
+                output(ProposalContract.ID, "ProposalState Label",  proposalState)
+                command(party1.publicKey, ProposalContract.Commands.Propose())
+                this.verifies()
+            }
+
+            val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
+            val proposalStateStaticPointer = StaticPointer<ProposalState>(proposalStateStateAndRef.ref, ProposalState::class.java)
+            val readyState = ReadyState(party2.party, proposalStateStaticPointer, agreementStateStaticPointer, Instant.MAX, proposalState.proposer, proposalState.responders)
+            // check verifies
+            transaction {
+                reference("ProposalState Label")
                 output(ProposalContract.ID, readyState)
                 command(party2.publicKey, ProposalContract.Commands.Consent())
                 this.verifies()
             }
+
             // two outputs
             transaction {
-                reference(ProposalContract.ID, proposalState)
+                reference("ProposalState Label")
                 output(ProposalContract.ID, readyState)
                 output(ProposalContract.ID, readyState)
                 command(party2.publicKey, ProposalContract.Commands.Consent())
@@ -470,14 +595,39 @@ class ProposalContractTests(){
     @Test
     fun `consent - reference states`(){
 
-        val proposalState = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-        val proposalState_2 = ProposalState(mockAgreementState_2, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-        val readyState = ReadyState(party2.party, proposalState, Instant.now(), proposalState.proposer, proposalState.responders )
+//        val proposalState = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+//        val proposalState_2 = ProposalState(mockAgreementState_2, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+//        val readyState = ReadyState(party2.party, proposalState, Instant.now(), proposalState.proposer, proposalState.responders )
 
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
             transaction {
-                reference(ProposalContract.ID, proposalState)
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState_2 = ProposalState(agreementStateStaticPointer, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
+
+            // set up ProposalState on Ledger
+            transaction {
+                reference("AgreementState Label")
+                output(ProposalContract.ID, "ProposalState Label",  proposalState)
+                command(party1.publicKey, ProposalContract.Commands.Propose())
+                this.verifies()
+            }
+
+            val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
+            val proposalStateStaticPointer = StaticPointer<ProposalState>(proposalStateStateAndRef.ref, ProposalState::class.java)
+            val readyState = ReadyState(party2.party, proposalStateStaticPointer, agreementStateStaticPointer, Instant.MAX, proposalState.proposer, proposalState.responders)
+            // check verifies
+            transaction {
+                reference("ProposalState Label")
                 output(ProposalContract.ID, readyState)
                 command(party2.publicKey, ProposalContract.Commands.Consent())
                 this.verifies()
@@ -488,20 +638,30 @@ class ProposalContractTests(){
                 command(party2.publicKey, ProposalContract.Commands.Consent())
                 this.failsWith("There should be one existing ProposalState as a reference state")
             }
-            // two reference state
+
+            // two Proposal reference states
             transaction {
-                reference(ProposalContract.ID, proposalState)
-                reference(ProposalContract.ID, proposalState)
+                reference("ProposalState Label")
+                reference(ProposalContract.ID, proposalState_2)
                 output(ProposalContract.ID, readyState)
                 command(party2.publicKey, ProposalContract.Commands.Consent())
                 this.failsWith("There should be one existing ProposalState as a reference state")
+
             }
-            // // referenced ProposalState doesn't match hash in ReadyState
+            // two different reference states
+            transaction {
+                reference("ProposalState Label")
+                reference("AgreementState Label")
+                output(ProposalContract.ID, readyState)
+                command(party2.publicKey, ProposalContract.Commands.Consent())
+                this.verifies()
+            }
+             // referenced ProposalState doesn't match hash in ReadyState
             transaction {
                 reference(ProposalContract.ID, proposalState_2)
                 output(ProposalContract.ID, readyState)
                 command(party2.publicKey, ProposalContract.Commands.Consent())
-                this.failsWith("hashProposalState must equal the sha256 hash of the referenced ProposalState")
+                this.fails()
             }
         }
     }
@@ -509,34 +669,57 @@ class ProposalContractTests(){
     @Test
     fun `consent - signers`(){
 
-        val proposalState = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-        val readyState = ReadyState(party2.party, proposalState, Instant.now(), proposalState.proposer, proposalState.responders )
-
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
             transaction {
-                reference(ProposalContract.ID, proposalState)
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState_2 = ProposalState(agreementStateStaticPointer, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
+
+            // set up ProposalState on Ledger
+            transaction {
+                reference("AgreementState Label")
+                output(ProposalContract.ID, "ProposalState Label",  proposalState)
+                command(party1.publicKey, ProposalContract.Commands.Propose())
+                this.verifies()
+            }
+
+            val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
+            val proposalStateStaticPointer = StaticPointer<ProposalState>(proposalStateStateAndRef.ref, ProposalState::class.java)
+            val readyState = ReadyState(party2.party, proposalStateStaticPointer, agreementStateStaticPointer, Instant.MAX, proposalState.proposer, proposalState.responders)
+            // check verifies
+            transaction {
+                reference("ProposalState Label")
                 output(ProposalContract.ID, readyState)
                 command(party2.publicKey, ProposalContract.Commands.Consent())
                 this.verifies()
             }
+
             // party1 signs
             transaction {
-                reference(ProposalContract.ID, proposalState)
+                reference("ProposalState Label")
                 output(ProposalContract.ID, readyState)
                 command(party1.publicKey, ProposalContract.Commands.Consent())
                 this.failsWith("Owner should sign the transaction")
             }
             //  only party who is no proposer or in responders signs
             transaction {
-                reference(ProposalContract.ID, proposalState)
+                reference("ProposalState Label")
                 output(ProposalContract.ID, readyState)
                 command(otherIdentity.publicKey, ProposalContract.Commands.Consent())
                 this.failsWith("Owner should sign the transaction")
             }
             //  owner signs with another party
             transaction {
-                reference(ProposalContract.ID, proposalState)
+                reference("ProposalState Label")
                 output(ProposalContract.ID, readyState)
                 command(listOf(party2.publicKey, otherIdentity.publicKey), ProposalContract.Commands.Consent())
                 this.verifies()
@@ -548,11 +731,33 @@ class ProposalContractTests(){
     @Test
     fun `revokeConsent - inputs`(){
 
-        val proposalState = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-        val readyState = ReadyState(party2.party, proposalState, Instant.now(), proposalState.proposer, proposalState.responders )
-
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
+            transaction {
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState_2 = ProposalState(agreementStateStaticPointer, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
+
+            // set up ProposalState on Ledger
+            transaction {
+                reference("AgreementState Label")
+                output(ProposalContract.ID, "ProposalState Label",  proposalState)
+                command(party1.publicKey, ProposalContract.Commands.Propose())
+                this.verifies()
+            }
+
+            val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
+            val proposalStateStaticPointer = StaticPointer<ProposalState>(proposalStateStateAndRef.ref, ProposalState::class.java)
+            val readyState = ReadyState(party2.party, proposalStateStaticPointer, agreementStateStaticPointer, Instant.MAX, proposalState.proposer, proposalState.responders)
+            // check verifies
             transaction {
                 input(ProposalContract.ID, readyState)
                 command(party2.publicKey, ProposalContract.Commands.RevokeConsent())
@@ -578,11 +783,33 @@ class ProposalContractTests(){
     @Test
     fun `revokeConsent - outputs`(){
 
-        val proposalState = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-        val readyState = ReadyState(party2.party, proposalState, Instant.now(), proposalState.proposer, proposalState.responders )
-
         ledgerServices.ledger {
 
+            // Set up Agreement State on Ledger
+            transaction {
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
+
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState_2 = ProposalState(agreementStateStaticPointer, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
+
+            // set up ProposalState on Ledger
+            transaction {
+                reference("AgreementState Label")
+                output(ProposalContract.ID, "ProposalState Label",  proposalState)
+                command(party1.publicKey, ProposalContract.Commands.Propose())
+                this.verifies()
+            }
+
+            val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
+            val proposalStateStaticPointer = StaticPointer<ProposalState>(proposalStateStateAndRef.ref, ProposalState::class.java)
+            val readyState = ReadyState(party2.party, proposalStateStaticPointer, agreementStateStaticPointer, Instant.MAX, proposalState.proposer, proposalState.responders)
+            // check verifies
             transaction {
                 input(ProposalContract.ID, readyState)
                 command(party2.publicKey, ProposalContract.Commands.RevokeConsent())
@@ -601,11 +828,32 @@ class ProposalContractTests(){
     @Test
     fun `revokeConsent - signers`() {
 
-        val proposalState = ProposalState(mockAgreementState, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-        val readyState = ReadyState(party2.party, proposalState, Instant.now(), proposalState.proposer, proposalState.responders)
-
         ledgerServices.ledger {
+            // Set up Agreement State on Ledger
+            transaction {
+                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                command(party1.publicKey, AgreementContract.Commands.Create())
+                this.verifies()
+            }
 
+            // Get StaticPointer to ref state and create the ProposalState
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
+            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
+            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState_2 = ProposalState(agreementStateStaticPointer, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
+
+            // set up ProposalState on Ledger
+            transaction {
+                reference("AgreementState Label")
+                output(ProposalContract.ID, "ProposalState Label",  proposalState)
+                command(party1.publicKey, ProposalContract.Commands.Propose())
+                this.verifies()
+            }
+
+            val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
+            val proposalStateStaticPointer = StaticPointer<ProposalState>(proposalStateStateAndRef.ref, ProposalState::class.java)
+            val readyState = ReadyState(party2.party, proposalStateStaticPointer, agreementStateStaticPointer, Instant.MAX, proposalState.proposer, proposalState.responders)
+            // check verifies
             transaction {
                 input(ProposalContract.ID, readyState)
                 command(party2.publicKey, ProposalContract.Commands.RevokeConsent())
@@ -624,6 +872,7 @@ class ProposalContractTests(){
             }
         }
     }
+
 }
 
 

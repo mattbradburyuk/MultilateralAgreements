@@ -6,7 +6,7 @@ import com.multilateralagreements.contracts.ProposalState
 import com.multilateralagreements.workflows.AgreeAgreementResponderFlow
 import com.multilateralagreements.workflows.CreateAgreementFlow
 import com.multilateralagreements.workflows.CreateAgreementResponderFlow
-import com.multilateralagreements.workflows.CreateProposalFlow
+//import com.multilateralagreements.workflows.CreateProposalFlow
 import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.utilities.getOrThrow
@@ -50,7 +50,7 @@ class ProposalContractFlowsTests {
 
     @After
     fun tearDown() = network.stopNodes()
-
+/*
     @Test
     fun `create proposal flow test`() {
 
@@ -151,7 +151,7 @@ class ProposalContractFlowsTests {
 
     }
 
-
+*/
 
 
 }
