@@ -19,7 +19,7 @@ import org.junit.Test
 import kotlin.test.assert
 
 
-class AgreementContractFlowsTest {
+class AgreementContractFlowsTests {
 
     val mockNetworkParameters = MockNetworkParameters(listOf(TestCordapp.findCordapp("com.multilateralagreements.contracts"), TestCordapp.findCordapp("com.multilateralagreements.workflows")
             ))

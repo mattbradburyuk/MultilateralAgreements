@@ -21,6 +21,8 @@ class ProposalContract : Contract {
 
 // todo: Make the contract and state current state agnostic
 
+// todo add constraints around expiry time
+
     // Used to indicate the transaction's intent.
     interface Commands : CommandData {
         class Propose : Commands
