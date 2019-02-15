@@ -90,88 +90,29 @@ class CreateProposalResponderFlow(val otherPartySession: FlowSession): FlowLogic
     }
 }
 
-// todo: FinaliseProposalFlow -> goes to AgreeementFLow - or is it a subflow
-
 // todo: CancelProposalFlow
 // todo: CancelProposalResponderFlow
 
 // todo: ConsentFlow
 // todo: ConsentFlowResponder
 
-// Consent Flows
-
-//@InitiatingFlow
-//@StartableByRPC
-//class ConsentFlow(val proposalState: ProposalState, val consentExpiryTime: Instant = Instant.MAX ): FlowLogic<SignedTransaction>(){
-//
-//
-//    @Suspendable
-//    override fun call(): SignedTransaction{
-//
-//
-//        // find reference state
-//
-////        val proposalStateLinearId = proposalState.
-////
-////        val criteria = QueryCriteria.LinearStateQueryCriteria(linearId = listOf(linearId))
-////        val result = serviceHub.vaultService.queryBy<AgreementState>(criteria)
-////        val currentStateAndRef = result.states.first()
-////        val currentTxState = currentStateAndRef.state
-////        val currentState = currentTxState.data
-//
-//        // create output ReadyState
-//
-//        val me = serviceHub.myInfo.legalIdentities.first()
-//        val readyState = ReadyState(me,
-//                proposalState,
-//                consentExpiryTime,
-//                proposalState.proposer,
-//                proposalState.responders)
-//
-//
-//
-//
-//
-//
-//    }
-//}
-
-
 
 // todo: RevokeConsentFlow
 // todo: RevokeConsentResponderFlow
 
-// these could be written by the Services layer, but doing as Flows here
-
-// todo: get stateRef from transaction??
-
-// todo: Get Proposals for AgreementState linearId
-/// todo: Get ReadyStates for Agreement LinearId
-// todo Get Readystates for proposal
 
 
+// todo: write flows which return Proposals and readystates against a currentState - likely via a StateRef or StaticPointer ot the current State
 
+/**
+ * Use case is: I have an AgreementState, I want to see all proposals and ready's against it
+ *
+ * Will need to work out how to query the vault for states which have currentStateStaticPointer poointing to the State in question
+ *
+ * Likely need to make Proposal and Ready States Queriable, set up a scheme and write a VaultCustomQueryCriteria. See Ivan's example in billing app
+ *
+ */
 
-//
-//class PropsalStatesfromCurrentStateFlow(val currentState: LinearState): FlowLogic<ProposalState>(){
-//
-//
-//    @Suspendable
-//    override fun call(): ProposalState {
-//
-//
-////        todo: workout how to query the vault for properties of states
-//
-////        val criteria = QueryCriteria.LinearStateQueryCriteria(linearId = listOf(currentState.linearId))
-////        val result = serviceHub.vaultService.queryBy<ProposalState>(criteria)
-////        val currentStateAndRef = result.states.first()
-////        val currentTxState = currentStateAndRef.state
-////        val currentState = currentTxState.data
-//
-//    }
-//
-//
-//}
 
 
 

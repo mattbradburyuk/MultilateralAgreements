@@ -48,8 +48,6 @@ class ProposalContractTests(){
     @Test
     fun `one proposalContract command only`(){
 
-// todo: work out how to do unit tests involving reference states
-
         ledgerServices.ledger {
 
             // Set up Agreement State on Ledger
