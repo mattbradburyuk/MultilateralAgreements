@@ -1,15 +1,13 @@
 package com.multilateralagreements.workflows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.multilateralagreements.contracts.AgreementState
-import com.multilateralagreements.contracts.ProposalContract
-import com.multilateralagreements.contracts.ProposalState
-import com.multilateralagreements.contracts.ReadyState
+import com.multilateralagreements.contracts.*
 import net.corda.core.contracts.*
 import net.corda.core.contracts.Requirements.using
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.node.services.queryBy
+import net.corda.core.node.services.vault.Builder.equal
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
@@ -113,6 +111,19 @@ class CreateProposalResponderFlow(val otherPartySession: FlowSession): FlowLogic
  *
  */
 
+@InitiatingFlow
+@StartableByRPC
+class GetProposalFromAgreementPointFlow(val currentStatePointer: StaticPointer<AgreementState>): FlowLogic<List<StateAndRef<ProposalState>>>(){
+
+    @Suspendable
+    override fun call(): List<StateAndRef<ProposalState>>{
+            val criteria =
+                    ProposalStateSchemaV1.PersistentProposalState::currentStatePointer.equal(currentStatePointer)
+
+            return serviceHub.vaultService.queryBy<ProposalState>(QueryCriteria.VaultCustomQueryCriteria(criteria)).states
+
+    }
+}
 
 
 

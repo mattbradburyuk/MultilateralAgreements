@@ -3,10 +3,7 @@ package com.multilateralagreements.workflows.tests
 import com.multilateralagreements.contracts.AgreementState
 import com.multilateralagreements.contracts.AgreementStateStatus
 import com.multilateralagreements.contracts.ProposalState
-import com.multilateralagreements.workflows.AgreeAgreementResponderFlow
-import com.multilateralagreements.workflows.CreateAgreementFlow
-import com.multilateralagreements.workflows.CreateAgreementResponderFlow
-import com.multilateralagreements.workflows.CreateProposalFlow
+import com.multilateralagreements.workflows.*
 import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.StaticPointer
 //import com.multilateralagreements.workflows.CreateProposalFlow
@@ -99,6 +96,20 @@ class ProposalContractFlowsTests {
         // check candidateState is the same in b's vault as was put into a's flow
 
         assert(returnedCandidateState == candidateState)
+
+
+        val flow3 = GetProposalFromAgreementPointFlow(currentStateStaticPointer)
+        val future3 = a.startFlow(flow3)
+        network.runNetwork()
+        val returnedList = future3.getOrThrow()
+
+        print("MB: list: $returnedList")
+
+
+
+
+
+
 
     }
 

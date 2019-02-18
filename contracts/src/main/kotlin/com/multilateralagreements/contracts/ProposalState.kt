@@ -8,6 +8,9 @@ import net.corda.core.contracts.StaticPointer
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
+import net.corda.core.schemas.MappedSchema
+import net.corda.core.schemas.PersistentState
+import net.corda.core.schemas.QueryableState
 import java.time.Instant
 
 // *********
@@ -23,7 +26,18 @@ data class ProposalState(
         val proposer: Party,
         val responders: List<Party>
 
-): ContractState {
+): ContractState, QueryableState {
+
+    override fun generateMappedObject(schema : MappedSchema) : PersistentState {
+        return when (schema) {
+            is ProposalStateSchemaV1 -> ProposalStateSchemaV1.PersistentProposalState(currentStatePointer, proposer)
+            else -> throw IllegalArgumentException("Unrecognised schema $schema")
+        }
+    }
+    override fun supportedSchemas() = listOf(ProposalStateSchemaV1)
+
+
+
 
     override val participants: List<AbstractParty> = (responders.union(listOf(proposer)).toList())
 
