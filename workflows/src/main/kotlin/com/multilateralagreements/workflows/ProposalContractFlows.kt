@@ -109,7 +109,7 @@ class CreateProposalResponderFlow(val otherPartySession: FlowSession): FlowLogic
  *
  * Will need to work out how to query the vault for states which have currentStateStaticPointer poointing to the State in question
  *
- * Likely need to make Proposal and Ready States Queriable, set up a scheme and write a VaultCustomQueryCriteria. See Ivan's example in billing app
+ * Likely need to make Proposal and Ready States Queryable, set up a scheme and write a VaultCustomQueryCriteria. See Ivan's example in billing app
  *
  */
 
