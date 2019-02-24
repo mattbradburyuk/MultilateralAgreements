@@ -14,10 +14,16 @@ object ProposalStateSchemaV1 : MappedSchema(schemaFamily = ProposalState::class.
     @Entity
     @Table(name = "proposal_states")
     class PersistentProposalState (
-
-           // todo: Something wrong here, get error: org.hibernate.MappingException: Could not determine type for: net.corda.core.contracts.StaticPointer, at table: proposal_states, for columns: [org.hibernate.mapping.Column(current_pointer)]
             @Column(name = "current_pointer")
             var currentStatePointer: StaticPointer<AgreementState>,
             @Column(name = "proposer")
             var proposer : Party) : PersistentState()
 }
+
+
+
+// todo: Something wrong here, get error: org.hibernate.MappingException: Could not determine type for: net.corda.core.contracts.StaticPointer, at table: proposal_states, for columns: [org.hibernate.mapping.Column(current_pointer)]
+
+// todo: write a simple cordapp with a queryable state without StaticPointer, get it working, then add StaticPointer to see if it breaks
+
+// can also try compiling it against corda v3.3 before adding Static pointer

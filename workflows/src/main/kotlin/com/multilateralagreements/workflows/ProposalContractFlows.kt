@@ -122,6 +122,8 @@ class GetProposalFromAgreementPointFlow(val currentStatePointer: StaticPointer<A
 
             return serviceHub.vaultService.queryBy<ProposalState>(QueryCriteria.VaultCustomQueryCriteria(criteria)).states
 
+
+
     }
 }
 
