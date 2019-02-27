@@ -37,7 +37,6 @@ class CreateProposalFlow(val currentStateRef: StateRef,
     @Suspendable
     override fun call(): SignedTransaction {
 
-
         val currentStateAndRef = serviceHub.toStateAndRef<AgreementState>(currentStateRef)
 
         // create output state
@@ -109,12 +108,10 @@ class CreateConsentFlow(val proposalStateRef: StateRef,
         val proposalStateAndRef = serviceHub.toStateAndRef<ProposalState>(proposalStateRef)
         val proposalState = proposalStateAndRef.state.data
 
-
         // create output state
 
         val me = serviceHub.myInfo.legalIdentities.first()
         val outputState = ReadyState(me, proposalStateRef, proposalState.currentStateRef, expiryTime, proposalState.proposer, proposalState.responders)
-
 
         // create command and signers
 
