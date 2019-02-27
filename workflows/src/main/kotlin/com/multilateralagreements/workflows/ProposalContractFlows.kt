@@ -11,6 +11,7 @@ import net.corda.core.node.services.vault.Builder.equal
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
+import net.corda.core.utilities.ProgressTracker
 import java.time.Instant
 
 
@@ -31,6 +32,7 @@ class CreateProposalFlow(val currentStateRef: StateRef,
                          val responders: List<Party>
                          ): FlowLogic<SignedTransaction>(){
 
+    override val progressTracker = ProgressTracker()
 
     @Suspendable
     override fun call(): SignedTransaction {
@@ -93,6 +95,73 @@ class CreateProposalResponderFlow(val otherPartySession: FlowSession): FlowLogic
 
 // todo: ConsentFlow
 // todo: ConsentFlowResponder
+
+@InitiatingFlow
+@StartableByRPC
+class CreateConsentFlow(val proposalStateRef: StateRef,
+                         val expiryTime: Instant
+): FlowLogic<SignedTransaction>(){
+
+    override val progressTracker = ProgressTracker()
+
+    @Suspendable
+    override fun call(): SignedTransaction {
+
+        val proposalStateAndRef = serviceHub.toStateAndRef<ProposalState>(proposalStateRef)
+        val proposalState = proposalStateAndRef.state.data
+
+
+        // create output state
+
+        val me = serviceHub.myInfo.legalIdentities.first()
+        val outputState = ReadyState(me, proposalStateRef, proposalState.currentStateRef, expiryTime, proposalState.proposer, proposalState.responders)
+
+
+        // create command and signers
+
+        val command = ProposalContract.Commands.Consent()
+        val signers = me
+
+        // build transaction
+
+        val txBuilder = TransactionBuilder()
+
+        val notary = serviceHub.networkMapCache.notaryIdentities.first()
+        txBuilder.notary = notary
+
+        txBuilder.addReferenceState(ReferencedStateAndRef(proposalStateAndRef))
+        txBuilder.addOutputState(outputState)
+        txBuilder.addCommand(command, me.owningKey)
+
+        // verify
+
+        txBuilder.verify(serviceHub)
+
+        // sign
+
+        val stx = serviceHub.signInitialTransaction(txBuilder)
+
+        val sessions = mutableListOf<FlowSession>()
+
+        val parties = outputState.responders.union (listOf(outputState.proposer))
+
+        parties.filter { it != me }.forEach { sessions.add(initiateFlow(it)) }
+
+        val ftx = subFlow(FinalityFlow(stx,sessions))
+
+        return ftx
+    }
+}
+
+@InitiatedBy(CreateConsentFlow::class)
+class CreateConsentResponderFlow(val otherPartySession: FlowSession): FlowLogic<SignedTransaction>(){
+
+    @Suspendable
+    override fun call(): SignedTransaction{
+
+        return subFlow(ReceiveFinalityFlow(otherPartySession))
+    }
+}
 
 
 // todo: RevokeConsentFlow

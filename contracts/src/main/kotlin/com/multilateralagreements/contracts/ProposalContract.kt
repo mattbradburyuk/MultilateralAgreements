@@ -170,10 +170,10 @@ class ProposalContract : Contract {
              *     For unit tests use this.fails(), rather than this.failsWith("Resolved currentStatePointer must match Reference State StateAndRef")
              */
 
-            "Resolved proposalStatePointer must match Reference State StateAndRef" using ( readyStateOutput.proposalStatePointer ==
+            "Resolved proposalStatePointer must match Reference State StateAndRef" using ( readyStateOutput.proposalStateRef ==
                     referenceProposalStateRef )
 
-            "The currentStatePointer in the ReadyState must match the currentStatePointer in the referenced ProposalState" using (referenceProposalStateAndRef.state.data.currentStateRef == readyStateOutput.currentStatePointer)
+            "The currentStatePointer in the ReadyState must match the currentStatePointer in the referenced ProposalState" using (referenceProposalStateAndRef.state.data.currentStateRef == readyStateOutput.currentStateRef)
 
 
             // Signatures

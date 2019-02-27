@@ -15,8 +15,8 @@ import java.time.Instant
 @BelongsToContract(ProposalContract::class)
 data class ReadyState(
         val owner: Party,
-        val proposalStatePointer: StateRef,
-        val currentStatePointer: StateRef,
+        val proposalStateRef: StateRef,
+        val currentStateRef: StateRef,
         val expiryTime: Instant,
         val proposer: Party,
         val responders: List<Party>

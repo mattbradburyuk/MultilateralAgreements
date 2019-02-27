@@ -3,6 +3,7 @@ package com.multilateralagreements.workflows.tests
 import com.multilateralagreements.contracts.AgreementState
 import com.multilateralagreements.contracts.AgreementStateStatus
 import com.multilateralagreements.contracts.ProposalState
+import com.multilateralagreements.contracts.ReadyState
 import com.multilateralagreements.workflows.*
 import net.corda.core.contracts.StateRef
 //import com.multilateralagreements.workflows.CreateProposalFlow
@@ -41,6 +42,8 @@ class ProposalContractFlowsTests {
         listOf(a, b).forEach {
             it.registerInitiatedFlow(CreateAgreementResponderFlow::class.java)
             it.registerInitiatedFlow(AgreeAgreementResponderFlow::class.java)
+//            it.registerInitiatedFlow(CreateConsentResponderFlow::class.java)
+//            it.registerInitiatedFlow(CreateProposalResponderFlow::class.java)
         }
     }
 
@@ -50,8 +53,9 @@ class ProposalContractFlowsTests {
     @After
     fun tearDown() = network.stopNodes()
 
+    // todo: split this out
     @Test
-    fun `dummy flow test`() {
+    fun `createProposalFlow test`() {
 
         // set up Draft AgreementState on the Ledger
 
@@ -110,69 +114,52 @@ class ProposalContractFlowsTests {
 
         assert(proposalStateFromAVault == proposalState)
 
-
-
-
-
-
-
-
     }
 
-/*
+
     @Test
-    fun `consent flow test`() {
+    fun `createConsentFlow test`() {
 
         // set up Draft AgreementState on the Ledger
 
         val flow = CreateAgreementFlow("This is a mock agreement", partyb)
         val future = a.startFlow(flow)
         network.runNetwork()
-
-        // get the AgreementState from the transaction and create the ProposalState
-
         val returnedTx = future.getOrThrow()
-        val currentState = returnedTx.toLedgerTransaction(a.services).outputs.single().data as AgreementState
-        val linearId = currentState.linearId
+
+        // get the currentState and pointer from the transaction and create the ProposalState
+
+        val currentStateRef = StateRef(returnedTx.id, 0)
+
+        val currentState = a.services.toStateAndRef<AgreementState>(currentStateRef).state.data
+
         val candidateState = AgreementState("This is a modified mock Agreement",
                 partya,
                 partyb,
                 status = AgreementStateStatus.AGREED,
-                linearId = linearId)
+                linearId = currentState.linearId)
 
         // CreateProposalFlow
 
-        val flow2 = CreateProposalFlow(linearId, candidateState, Instant.MAX, listOf(partyb))
+        val flow2 = CreateProposalFlow(currentStateRef, candidateState, Instant.MAX, listOf(partyb))
         val future2 = a.startFlow(flow2)
         network.runNetwork()
         val returnedTx2 = future2.getOrThrow()
 
-        // check state return from the flow is the correct type
+        val proposalStateRef = StateRef(returnedTx2.id, 0)
 
-        assert(returnedTx2.toLedgerTransaction(a.services).outputs.single().data is ProposalState)
+        // createConsentFlow
 
-        // get propose transactions output states from b's vault
+        val flow3 = CreateConsentFlow(proposalStateRef, Instant.MAX)
+        val future3 = b.startFlow(flow3)
+        network.runNetwork()
+        val returnedTx3 = future3.getOrThrow()
 
-        val tx2OutputStateRef = returnedTx2.coreTransaction.outRef<ProposalState>(0).ref
-        val criteriaTx2 = QueryCriteria.VaultQueryCriteria(stateRefs = listOf(tx2OutputStateRef))
-        val resultTx2 = b.services.vaultService.queryBy<ProposalState>(criteriaTx2)
-        val returnedCandidateState = resultTx2.states.single().state.data.candidateState
+        val readyStateRef = StateRef(returnedTx3.id, 0)
 
-        // check candidateState is the same in b's vault as was put into a's flow
+        val readyState = a.services.toStateAndRef<ReadyState>(readyStateRef).state.data
 
-        assert(returnedCandidateState == candidateState)
-
-        // consent Flow
-
-
-
-
-
-
-
+        assert(readyState.currentStateRef == currentStateRef )
+        assert(readyState.proposalStateRef == proposalStateRef)
     }
-*/
-
-
-
 }
