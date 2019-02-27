@@ -191,7 +191,7 @@ class ProposalContractFlowsTests {
         val flow3 = CreateAgreementFlow("This is a unrelated mock agreement", partyb)
         val future3 = a.startFlow(flow3)
         network.runNetwork()
-        val returnedTx3 = future.getOrThrow()
+        val returnedTx3 = future3.getOrThrow()
 
 
 
