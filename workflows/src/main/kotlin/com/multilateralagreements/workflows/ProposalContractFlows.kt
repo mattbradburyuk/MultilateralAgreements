@@ -113,15 +113,14 @@ class CreateProposalResponderFlow(val otherPartySession: FlowSession): FlowLogic
 
 @InitiatingFlow
 @StartableByRPC
-class GetProposalFromAgreementPointFlow(val currentStateRef: StateRef): FlowLogic<List<StateAndRef<ProposalState>>>(){
+class GetProposalStatesFromAgreementStateRefFlow(val currentStateRef: StateRef): FlowLogic<List<StateAndRef<ProposalState>>>(){
 
     @Suspendable
     override fun call(): List<StateAndRef<ProposalState>>{
-            val criteria =
-                    ProposalStateSchemaV1.PersistentProposalState::currentStateRef.equal(currentStateRef)
+
+        val criteria = ProposalStateSchemaV1.PersistentProposalState::currentStateRef.equal(currentStateRef)
 
             return serviceHub.vaultService.queryBy<ProposalState>(QueryCriteria.VaultCustomQueryCriteria(criteria)).states
-
 
 
     }

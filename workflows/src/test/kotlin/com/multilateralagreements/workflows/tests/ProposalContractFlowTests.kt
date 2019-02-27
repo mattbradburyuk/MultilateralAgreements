@@ -5,11 +5,9 @@ import com.multilateralagreements.contracts.AgreementStateStatus
 import com.multilateralagreements.contracts.ProposalState
 import com.multilateralagreements.workflows.*
 import net.corda.core.contracts.StateRef
-import net.corda.core.contracts.StaticPointer
 //import com.multilateralagreements.workflows.CreateProposalFlow
 import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.QueryCriteria
-import net.corda.core.transactions.SignedTransaction
 import net.corda.core.utilities.getOrThrow
 import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.node.MockNetwork
@@ -53,7 +51,7 @@ class ProposalContractFlowsTests {
     fun tearDown() = network.stopNodes()
 
     @Test
-    fun `create proposal flow test`() {
+    fun `dummy flow test`() {
 
         // set up Draft AgreementState on the Ledger
 
@@ -83,30 +81,36 @@ class ProposalContractFlowsTests {
 
         // check state return from the flow is the correct type
 
+
+
         assert(returnedTx2.toLedgerTransaction(a.services).outputs.single().data is ProposalState)
 
+        val proposalState = returnedTx2.toLedgerTransaction(a.services).outputs.single().data as ProposalState
 
         // get propose transactions output states from b's vault
 
         val tx2OutputStateRef = returnedTx2.coreTransaction.outRef<ProposalState>(0).ref
         val criteriaTx2 = QueryCriteria.VaultQueryCriteria(stateRefs = listOf(tx2OutputStateRef))
         val resultTx2 = b.services.vaultService.queryBy<ProposalState>(criteriaTx2)
-        val returnedCandidateState = resultTx2.states.single().state.data.candidateState
+        val returnedProposalStateFromB = resultTx2.states.single().state.data
 
         // check candidateState is the same in b's vault as was put into a's flow
 
-        assert(returnedCandidateState == candidateState)
+        assert(returnedProposalStateFromB == proposalState)
 
 
-//        // todo : need to get look up to vault working before completing this flow
-//
-//        val flow3 = GetProposalFromAgreementPointFlow(currentStateStaticPointer)
-//        val future3 = a.startFlow(flow3)
-//        network.runNetwork()
-//        val returnedList = future3.getOrThrow()
-//
-//        print("MB: list: $returnedList")
-//
+        // check
+
+        val flow3 = GetProposalStatesFromAgreementStateRefFlow(currentStateRef)
+        val future3 = a.startFlow(flow3)
+        network.runNetwork()
+        val returnedList = future3.getOrThrow()
+
+        val proposalStateFromAVault = returnedList.single().state.data
+
+        assert(proposalStateFromAVault == proposalState)
+
+
 
 
 

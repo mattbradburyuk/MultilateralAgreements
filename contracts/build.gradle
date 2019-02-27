@@ -1,6 +1,7 @@
 apply plugin: 'kotlin'
 apply plugin: 'net.corda.plugins.cordapp'
 apply plugin: 'net.corda.plugins.cordformation'
+apply plugin: 'kotlin-jpa'      // required when using JPA
 
 cordapp {
     targetPlatformVersion 4
