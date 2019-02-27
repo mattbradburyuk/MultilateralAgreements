@@ -48,7 +48,6 @@ class CreateProposalFlow(val currentStateRef: StateRef,
         // create command and signers
 
         val command = ProposalContract.Commands.Propose()
-        val signers = me
 
         // build transaction
 
@@ -120,7 +119,6 @@ class CreateConsentFlow(val proposalStateRef: StateRef,
         // create command and signers
 
         val command = ProposalContract.Commands.Consent()
-        val signers = me
 
         // build transaction
 
@@ -142,11 +140,8 @@ class CreateConsentFlow(val proposalStateRef: StateRef,
         val stx = serviceHub.signInitialTransaction(txBuilder)
 
         val sessions = mutableListOf<FlowSession>()
-
         val parties = outputState.responders.union (listOf(outputState.proposer))
-
         parties.filter { it != me }.forEach { sessions.add(initiateFlow(it)) }
-
         val ftx = subFlow(FinalityFlow(stx,sessions))
 
         return ftx
@@ -172,11 +167,7 @@ class CreateConsentResponderFlow(val otherPartySession: FlowSession): FlowLogic<
 // todo: write flows which return Proposals and readystates against a currentState - likely via a StateRef or StaticPointer ot the current State
 
 /**
- * Use case is: I have an AgreementState, I want to see all proposals and ready's against it
- *
- * Will need to work out how to query the vault for states which have currentStateStaticPointer poointing to the State in question
- *
- * Likely need to make Proposal and Ready States Queryable, set up a scheme and write a VaultCustomQueryCriteria. See Ivan's example in billing app
+ * Use case is: I have an AgreementState, I want to see all proposals
  *
  */
 

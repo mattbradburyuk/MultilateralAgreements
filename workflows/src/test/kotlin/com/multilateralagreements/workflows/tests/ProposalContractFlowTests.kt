@@ -53,7 +53,7 @@ class ProposalContractFlowsTests {
     @After
     fun tearDown() = network.stopNodes()
 
-    // todo: split this out
+
     @Test
     fun `createProposalFlow test`() {
 
@@ -85,37 +85,25 @@ class ProposalContractFlowsTests {
 
         // check state return from the flow is the correct type
 
+        val proposalStateRef = StateRef(returnedTx2.id, 0)
+        val proposalStateFromA = a.services.toStateAndRef<ProposalState>(proposalStateRef)
+        val proposalStateFromB = b.services.toStateAndRef<ProposalState>(proposalStateRef)
 
 
-        assert(returnedTx2.toLedgerTransaction(a.services).outputs.single().data is ProposalState)
+        // check that party a and party b have the same state
 
-        val proposalState = returnedTx2.toLedgerTransaction(a.services).outputs.single().data as ProposalState
+        assert(proposalStateFromA == proposalStateFromB)
 
-        // get propose transactions output states from b's vault
+        val proposalState = proposalStateFromA.state.data
 
-        val tx2OutputStateRef = returnedTx2.coreTransaction.outRef<ProposalState>(0).ref
-        val criteriaTx2 = QueryCriteria.VaultQueryCriteria(stateRefs = listOf(tx2OutputStateRef))
-        val resultTx2 = b.services.vaultService.queryBy<ProposalState>(criteriaTx2)
-        val returnedProposalStateFromB = resultTx2.states.single().state.data
+        // check proposalState is correctly formed
 
-        // check candidateState is the same in b's vault as was put into a's flow
-
-        assert(returnedProposalStateFromB == proposalState)
-
-
-        // check
-
-        val flow3 = GetProposalStatesFromAgreementStateRefFlow(currentStateRef)
-        val future3 = a.startFlow(flow3)
-        network.runNetwork()
-        val returnedList = future3.getOrThrow()
-
-        val proposalStateFromAVault = returnedList.single().state.data
-
-        assert(proposalStateFromAVault == proposalState)
+        assert(proposalState.currentStateRef == currentStateRef)
+        assert(proposalState.candidateState == candidateState)
+        assert(proposalState.proposer == a.info.legalIdentities.first())
+        assert(proposalState.responders.toSet() == setOf(currentState.party2))
 
     }
-
 
     @Test
     fun `createConsentFlow test`() {
@@ -159,7 +147,64 @@ class ProposalContractFlowsTests {
 
         val readyState = a.services.toStateAndRef<ReadyState>(readyStateRef).state.data
 
-        assert(readyState.currentStateRef == currentStateRef )
+        assert(readyState.currentStateRef == currentStateRef)
         assert(readyState.proposalStateRef == proposalStateRef)
+    }
+
+
+    @Test
+    fun `GetProposalStatesFromAgreementStateRefFlow test`() {
+
+        // set up Draft AgreementState on the Ledger
+
+        val flow = CreateAgreementFlow("This is a mock agreement", partyb)
+        val future = a.startFlow(flow)
+        network.runNetwork()
+        val returnedTx = future.getOrThrow()
+
+        // get the currentState and pointer from the transaction and create the ProposalState
+
+        val currentStateRef = StateRef(returnedTx.id, 0)
+
+        val currentState = a.services.toStateAndRef<AgreementState>(currentStateRef).state.data
+
+        val candidateState = AgreementState("This is a modified mock Agreement",
+                partya,
+                partyb,
+                status = AgreementStateStatus.AGREED,
+                linearId = currentState.linearId)
+
+        // CreateProposalFlow
+
+        val flow2 = CreateProposalFlow(currentStateRef, candidateState, Instant.MAX, listOf(partyb))
+        val future2 = a.startFlow(flow2)
+        network.runNetwork()
+        val returnedTx2 = future2.getOrThrow()
+
+        // check state return from the flow is the correct type
+
+        val proposalStateRef = StateRef(returnedTx2.id, 0)
+        val proposalState = a.services.toStateAndRef<ProposalState>(proposalStateRef).state.data
+
+        // add another AgreementState
+
+        val flow3 = CreateAgreementFlow("This is a unrelated mock agreement", partyb)
+        val future3 = a.startFlow(flow3)
+        network.runNetwork()
+        val returnedTx3 = future.getOrThrow()
+
+
+
+        // check retrieving ProposalState using GetProposalStatesFromAgreementStateRefFlow
+
+        val flow4 = GetProposalStatesFromAgreementStateRefFlow(currentStateRef)
+        val future4 = a.startFlow(flow4)
+        network.runNetwork()
+        val returnedList = future4.getOrThrow()
+
+        val proposalStateFromAVault = returnedList.single().state.data
+
+        assert(proposalStateFromAVault == proposalState)
+
     }
 }
