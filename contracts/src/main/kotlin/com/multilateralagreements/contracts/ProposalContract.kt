@@ -74,6 +74,7 @@ class ProposalContract : Contract {
             val proposalStateOutput = proposalStateOutputs.single()
 
             /**
+             *     todo: check this logic now changed to stateref
              *     This error message will never be called because if there is only one AgreementState referenced and the
              *     CurrentStatePointer points to different state, then when the currentStatePointer.resolve(tx) is called,
              *     it will error because the state that currentStatePointer is pointing to cannot be in the transaction.
@@ -83,8 +84,8 @@ class ProposalContract : Contract {
              *     For unit tests use this.fails(), rather than this.failsWith("Resolved currentStatePointer must match Reference State StateAndRef")
              */
 
-            "Resolved currentStatePointer must match Reference State StateAndRef" using (proposalStateOutput.currentStatePointer.resolve(tx) ==
-                    tx.referenceInputRefsOfType<AgreementState>().single()   )
+            "Resolved currentStatePointer must match Reference State StateRef" using (proposalStateOutput.currentStateRef ==
+                    tx.referenceInputRefsOfType<AgreementState>().single().ref   )
 
             // Signatures
             "Proposer should sign the transaction" using (proposalStateOutputs.first().proposer.owningKey in command.signers)
@@ -152,15 +153,14 @@ class ProposalContract : Contract {
             // Reference states
             val referenceProposalStates = tx.referenceInputsOfType<ProposalState>()
             "There should be one existing ProposalState as a reference state" using (referenceProposalStates.size == 1)
-//            val referenceProposalState = referenceProposalStates.single()
+
             val referenceProposalStateAndRef = tx.referenceInputRefsOfType<ProposalState>().single()
+            val referenceProposalStateRef = referenceProposalStateAndRef.ref
 
             // pointer checks
-            val resolvedProposalStateAndRef = readyStateOutput.proposalStatePointer.resolve(tx)
-            val resolvedProposalState = resolvedProposalStateAndRef.state.data
-
 
             /**
+             *     todo: check this logic now changed to stateref
              *     This error message will never be called because if there is only one ProposalState referenced and the
              *     proposalStatePointer points to different state, then when the proposalStatePointer.resolve(tx) is called,
              *     it will error because the state that proposalStatePointer is pointing to cannot be in the transaction.
@@ -170,10 +170,10 @@ class ProposalContract : Contract {
              *     For unit tests use this.fails(), rather than this.failsWith("Resolved currentStatePointer must match Reference State StateAndRef")
              */
 
-            "Resolved proposalStatePointer must match Reference State StateAndRef" using (resolvedProposalStateAndRef ==
-                    referenceProposalStateAndRef )
+            "Resolved proposalStatePointer must match Reference State StateAndRef" using ( readyStateOutput.proposalStatePointer ==
+                    referenceProposalStateRef )
 
-            "The currentStatePointer in the ReadyState must match the currentStatePointer in the referenced ProposalState" using (resolvedProposalState.currentStatePointer == readyStateOutput.currentStatePointer)
+            "The currentStatePointer in the ReadyState must match the currentStatePointer in the referenced ProposalState" using (referenceProposalStateAndRef.state.data.currentStateRef == readyStateOutput.currentStatePointer)
 
 
             // Signatures

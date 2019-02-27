@@ -65,8 +65,8 @@ class ProposalContractFlowsTests {
         // get the currentState and pointer from the transaction and create the ProposalState
 
         val currentStateRef = StateRef(returnedTx.id, 0)
-        val currentStateStaticPointer = StaticPointer<AgreementState>(currentStateRef, AgreementState::class.java)
-        val currentState = currentStateStaticPointer.resolve(a.services).state.data
+
+        val currentState = a.services.toStateAndRef<AgreementState>(currentStateRef).state.data
 
         val candidateState = AgreementState("This is a modified mock Agreement",
                 partya,
@@ -76,7 +76,7 @@ class ProposalContractFlowsTests {
 
         // CreateProposalFlow
 
-        val flow2 = CreateProposalFlow(currentStateStaticPointer, candidateState, Instant.MAX, listOf(partyb))
+        val flow2 = CreateProposalFlow(currentStateRef, candidateState, Instant.MAX, listOf(partyb))
         val future2 = a.startFlow(flow2)
         network.runNetwork()
         val returnedTx2 = future2.getOrThrow()
@@ -98,13 +98,15 @@ class ProposalContractFlowsTests {
         assert(returnedCandidateState == candidateState)
 
 
-        val flow3 = GetProposalFromAgreementPointFlow(currentStateStaticPointer)
-        val future3 = a.startFlow(flow3)
-        network.runNetwork()
-        val returnedList = future3.getOrThrow()
-
-        print("MB: list: $returnedList")
-
+//        // todo : need to get look up to vault working before completing this flow
+//
+//        val flow3 = GetProposalFromAgreementPointFlow(currentStateStaticPointer)
+//        val future3 = a.startFlow(flow3)
+//        network.runNetwork()
+//        val returnedList = future3.getOrThrow()
+//
+//        print("MB: list: $returnedList")
+//
 
 
 

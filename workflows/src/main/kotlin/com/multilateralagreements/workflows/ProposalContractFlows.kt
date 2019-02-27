@@ -25,7 +25,7 @@ import java.time.Instant
 
 @InitiatingFlow
 @StartableByRPC
-class CreateProposalFlow(val currentStateStaticPointer: StaticPointer<AgreementState>,
+class CreateProposalFlow(val currentStateRef: StateRef,
                          val candidateState: ContractState,
                          val expiryTime: Instant,
                          val responders: List<Party>
@@ -36,12 +36,12 @@ class CreateProposalFlow(val currentStateStaticPointer: StaticPointer<AgreementS
     override fun call(): SignedTransaction {
 
 
-        val currentStateAndRef = currentStateStaticPointer.resolve(serviceHub)
+        val currentStateAndRef = serviceHub.toStateAndRef<AgreementState>(currentStateRef)
 
         // create output state
 
         val me = serviceHub.myInfo.legalIdentities.first()
-        val outputState = ProposalState(currentStateStaticPointer, candidateState, expiryTime, me, responders)
+        val outputState = ProposalState(currentStateRef, candidateState, expiryTime, me, responders)
 
         // create command and signers
 
@@ -113,12 +113,12 @@ class CreateProposalResponderFlow(val otherPartySession: FlowSession): FlowLogic
 
 @InitiatingFlow
 @StartableByRPC
-class GetProposalFromAgreementPointFlow(val currentStatePointer: StaticPointer<AgreementState>): FlowLogic<List<StateAndRef<ProposalState>>>(){
+class GetProposalFromAgreementPointFlow(val currentStateRef: StateRef): FlowLogic<List<StateAndRef<ProposalState>>>(){
 
     @Suspendable
     override fun call(): List<StateAndRef<ProposalState>>{
             val criteria =
-                    ProposalStateSchemaV1.PersistentProposalState::currentStatePointer.equal(currentStatePointer)
+                    ProposalStateSchemaV1.PersistentProposalState::currentStateRef.equal(currentStateRef)
 
             return serviceHub.vaultService.queryBy<ProposalState>(QueryCriteria.VaultCustomQueryCriteria(criteria)).states
 

@@ -57,10 +57,9 @@ class ProposalContractTests(){
                 this.verifies()
             }
 
-            // Get StaticPointer to ref state and create the ProposalState
+            //  Create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
 
             // check verifies
             transaction {
@@ -102,8 +101,7 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
 
             // check verifies
             transaction {
@@ -137,8 +135,7 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
 
             // check verifies
             transaction {
@@ -172,8 +169,7 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
 
             // check verifies
             transaction {
@@ -220,8 +216,7 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
 
             // check verifies
             transaction {
@@ -267,8 +262,7 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
 
             // check verifies
             transaction {
@@ -307,8 +301,7 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
 
             // check verifies
             transaction {
@@ -349,8 +342,7 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
 
             // check verifies
             transaction {
@@ -388,8 +380,7 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
 
             // check verifies
             transaction {
@@ -428,8 +419,7 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
 
             // check verifies
             transaction {
@@ -470,8 +460,7 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
 
             // check verifies
             transaction {
@@ -511,8 +500,7 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
 
             // set up ProposalState on Ledger
             transaction {
@@ -523,8 +511,7 @@ class ProposalContractTests(){
             }
 
             val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
-            val proposalStateStaticPointer = StaticPointer<ProposalState>(proposalStateStateAndRef.ref, ProposalState::class.java)
-            val readyState = ReadyState(party2.party, proposalStateStaticPointer, agreementStateStaticPointer, Instant.MAX, proposalState.proposer, proposalState.responders)
+            val readyState = ReadyState(party2.party, proposalStateStateAndRef.ref, agreementStateStateAndRef.ref, Instant.MAX, proposalState.proposer, proposalState.responders)
             // check verifies
             transaction {
                 reference("ProposalState Label")
@@ -557,8 +544,7 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
 
             // set up ProposalState on Ledger
             transaction {
@@ -569,8 +555,7 @@ class ProposalContractTests(){
             }
 
             val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
-            val proposalStateStaticPointer = StaticPointer<ProposalState>(proposalStateStateAndRef.ref, ProposalState::class.java)
-            val readyState = ReadyState(party2.party, proposalStateStaticPointer, agreementStateStaticPointer, Instant.MAX, proposalState.proposer, proposalState.responders)
+            val readyState = ReadyState(party2.party, proposalStateStateAndRef.ref, agreementStateStateAndRef.ref, Instant.MAX, proposalState.proposer, proposalState.responders)
             // check verifies
             transaction {
                 reference("ProposalState Label")
@@ -608,9 +593,8 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-            val proposalState_2 = ProposalState(agreementStateStaticPointer, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState_2 = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
 
             // set up ProposalState on Ledger
             transaction {
@@ -621,8 +605,7 @@ class ProposalContractTests(){
             }
 
             val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
-            val proposalStateStaticPointer = StaticPointer<ProposalState>(proposalStateStateAndRef.ref, ProposalState::class.java)
-            val readyState = ReadyState(party2.party, proposalStateStaticPointer, agreementStateStaticPointer, Instant.MAX, proposalState.proposer, proposalState.responders)
+            val readyState = ReadyState(party2.party, proposalStateStateAndRef.ref, agreementStateStateAndRef.ref, Instant.MAX, proposalState.proposer, proposalState.responders)
             // check verifies
             transaction {
                 reference("ProposalState Label")
@@ -678,9 +661,8 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-            val proposalState_2 = ProposalState(agreementStateStaticPointer, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState_2 = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
 
             // set up ProposalState on Ledger
             transaction {
@@ -691,8 +673,7 @@ class ProposalContractTests(){
             }
 
             val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
-            val proposalStateStaticPointer = StaticPointer<ProposalState>(proposalStateStateAndRef.ref, ProposalState::class.java)
-            val readyState = ReadyState(party2.party, proposalStateStaticPointer, agreementStateStaticPointer, Instant.MAX, proposalState.proposer, proposalState.responders)
+            val readyState = ReadyState(party2.party, proposalStateStateAndRef.ref, agreementStateStateAndRef.ref, Instant.MAX, proposalState.proposer, proposalState.responders)
             // check verifies
             transaction {
                 reference("ProposalState Label")
@@ -740,9 +721,8 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-            val proposalState_2 = ProposalState(agreementStateStaticPointer, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState_2 = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
 
             // set up ProposalState on Ledger
             transaction {
@@ -753,8 +733,7 @@ class ProposalContractTests(){
             }
 
             val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
-            val proposalStateStaticPointer = StaticPointer<ProposalState>(proposalStateStateAndRef.ref, ProposalState::class.java)
-            val readyState = ReadyState(party2.party, proposalStateStaticPointer, agreementStateStaticPointer, Instant.MAX, proposalState.proposer, proposalState.responders)
+            val readyState = ReadyState(party2.party, proposalStateStateAndRef.ref, agreementStateStateAndRef.ref, Instant.MAX, proposalState.proposer, proposalState.responders)
             // check verifies
             transaction {
                 input(ProposalContract.ID, readyState)
@@ -792,9 +771,8 @@ class ProposalContractTests(){
 
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-            val proposalState_2 = ProposalState(agreementStateStaticPointer, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState_2 = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
 
             // set up ProposalState on Ledger
             transaction {
@@ -805,8 +783,7 @@ class ProposalContractTests(){
             }
 
             val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
-            val proposalStateStaticPointer = StaticPointer<ProposalState>(proposalStateStateAndRef.ref, ProposalState::class.java)
-            val readyState = ReadyState(party2.party, proposalStateStaticPointer, agreementStateStaticPointer, Instant.MAX, proposalState.proposer, proposalState.responders)
+            val readyState = ReadyState(party2.party, proposalStateStateAndRef.ref, agreementStateStateAndRef.ref, Instant.MAX, proposalState.proposer, proposalState.responders)
             // check verifies
             transaction {
                 input(ProposalContract.ID, readyState)
@@ -837,8 +814,8 @@ class ProposalContractTests(){
             // Get StaticPointer to ref state and create the ProposalState
             val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
             val agreementStateStaticPointer = StaticPointer<AgreementState>(agreementStateStateAndRef.ref, AgreementState::class.java)
-            val proposalState = ProposalState(agreementStateStaticPointer, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
-            val proposalState_2 = ProposalState(agreementStateStaticPointer, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val proposalState_2 = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_2, Instant.now(), party1.party, listOf(party2.party))
 
             // set up ProposalState on Ledger
             transaction {
@@ -850,7 +827,7 @@ class ProposalContractTests(){
 
             val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
             val proposalStateStaticPointer = StaticPointer<ProposalState>(proposalStateStateAndRef.ref, ProposalState::class.java)
-            val readyState = ReadyState(party2.party, proposalStateStaticPointer, agreementStateStaticPointer, Instant.MAX, proposalState.proposer, proposalState.responders)
+            val readyState = ReadyState(party2.party, proposalStateStateAndRef.ref, agreementStateStateAndRef.ref, Instant.MAX, proposalState.proposer, proposalState.responders)
             // check verifies
             transaction {
                 input(ProposalContract.ID, readyState)

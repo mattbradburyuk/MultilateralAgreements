@@ -1,10 +1,7 @@
 package com.multilateralagreements.contracts
 
 
-import net.corda.core.contracts.BelongsToContract
-import net.corda.core.contracts.ContractState
-import net.corda.core.contracts.StatePointer
-import net.corda.core.contracts.StaticPointer
+import net.corda.core.contracts.*
 import net.corda.core.crypto.SecureHash
 import net.corda.core.identity.AbstractParty
 import net.corda.core.identity.Party
@@ -20,7 +17,7 @@ import java.time.Instant
 @BelongsToContract(ProposalContract::class)
 data class ProposalState(
 
-        val currentStatePointer: StaticPointer<AgreementState>,
+        val currentStateRef: StateRef,
         val candidateState: ContractState,
         val expiryTime: Instant,
         val proposer: Party,
@@ -30,7 +27,7 @@ data class ProposalState(
 
     override fun generateMappedObject(schema : MappedSchema) : PersistentState {
         return when (schema) {
-            is ProposalStateSchemaV1 -> ProposalStateSchemaV1.PersistentProposalState(currentStatePointer, proposer)
+            is ProposalStateSchemaV1 -> ProposalStateSchemaV1.PersistentProposalState(currentStateRef, proposer)
             else -> throw IllegalArgumentException("Unrecognised schema $schema")
         }
     }
