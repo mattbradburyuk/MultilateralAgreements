@@ -23,6 +23,59 @@ import java.time.Instant
 
 // Corda shell commands: todo: corda shell commands
 
+/**
+ * flow start CreateProposalFlow currentStateRef: newStateRef: { txhash: 2FD63295957D1922C55D41C113EA891B7D69FFB3B749AC87EB2AF10F5A64E82B, index: 0 },
+ *
+ * candidateState: newAgreementState: { agreementDetails: "This is a modified agreement between party A and B", party1: "O=PartyA, L=London, C=GB", party2: "O=PartyB, L=New York, C=US", status: "AGREED", linearId: newUniqueIdentifier {externalId: null, id: "4526a320-2d9f-4182-b130-766994c7569e" }} ,
+ *
+ * expiryTime: "2019-12-22T00:00:00Z" ,
+ *
+ * responders: ["O=PartyB, L=New York, C=US"]
+ *
+ *
+  */
+
+
+
+//
+//
+//
+//
+//
+// This is an agreement between party A and B, otherParty: "O=PartyB,L=New York,C=US"
+
+
+data class TestClass(val str1: String, val str2: String)
+
+
+@InitiatingFlow
+@StartableByRPC
+class YAMLTest(val str: String): FlowLogic<String>() {
+
+    override val progressTracker = ProgressTracker()
+
+    @Suspendable
+    override fun call(): String {
+
+        return str
+    }
+
+}
+
+@InitiatingFlow
+@StartableByRPC
+class YAMLTest2(val testClass: TestClass): FlowLogic<String>() {
+
+    override val progressTracker = ProgressTracker()
+
+    @Suspendable
+    override fun call(): String {
+
+        return testClass.toString()
+    }
+
+}
+
 
 @InitiatingFlow
 @StartableByRPC
