@@ -87,6 +87,8 @@ class ProposalContract : Contract {
             "Resolved currentStatePointer must match Reference State StateRef" using (proposalStateOutput.currentStateRef ==
                     tx.referenceInputRefsOfType<AgreementState>().single().ref   )
 
+            // todo: add check that LinearId of Proposal State is same as Current State
+
             // Signatures
             "Proposer should sign the transaction" using (proposalStateOutputs.first().proposer.owningKey in command.signers)
         }

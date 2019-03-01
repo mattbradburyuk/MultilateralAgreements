@@ -9,6 +9,7 @@ import net.corda.core.identity.Party
 import net.corda.core.node.services.queryBy
 import net.corda.core.node.services.vault.Builder.equal
 import net.corda.core.node.services.vault.QueryCriteria
+import net.corda.core.serialization.CordaSerializable
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
 import net.corda.core.utilities.ProgressTracker
@@ -24,14 +25,9 @@ import java.time.Instant
 // Corda shell commands: todo: corda shell commands
 
 /**
- * flow start CreateProposalFlow currentStateRef: newStateRef: { txhash: 2FD63295957D1922C55D41C113EA891B7D69FFB3B749AC87EB2AF10F5A64E82B, index: 0 },
+ * start CreateProposalFlow currentStateRef: newStateRef: { txhash: 2FD63295957D1922C55D41C113EA891B7D69FFB3B749AC87EB2AF10F5A64E82B, index: 0 }, candidateState: newAgreementState: { agreementDetails: "This is a modified agreement between party A and B", party1: "O=PartyA, L=London, C=GB", party2: "O=PartyB, L=New York, C=US", status: "AGREED", linearId: newUniqueIdentifier {externalId: null, id: "4526a320-2d9f-4182-b130-766994c7569e" }}, expiryTime: "2019-12-22T00:00:00Z", responders: ["O=PartyB, L=New York, C=US"]
  *
- * candidateState: newAgreementState: { agreementDetails: "This is a modified agreement between party A and B", party1: "O=PartyA, L=London, C=GB", party2: "O=PartyB, L=New York, C=US", status: "AGREED", linearId: newUniqueIdentifier {externalId: null, id: "4526a320-2d9f-4182-b130-766994c7569e" }} ,
- *
- * expiryTime: "2019-12-22T00:00:00Z" ,
- *
- * responders: ["O=PartyB, L=New York, C=US"]
- *
+ * start CreateProposalFlow currentStateRef: { txhash: 2FD63295957D1922C55D41C113EA891B7D69FFB3B749AC87EB2AF10F5A64E82B, index: 0 }, candidateState: { agreementDetails: "This is a modified agreement between party A and B", party1: "O=PartyA, L=London, C=GB", party2: "O=PartyB, L=New York, C=US", status: "AGREED", expiryTime: "2019-12-22T00:00:00Z", responders: ["O=PartyB, L=New York, C=US"]
  *
   */
 
@@ -44,7 +40,7 @@ import java.time.Instant
 //
 // This is an agreement between party A and B, otherParty: "O=PartyB,L=New York,C=US"
 
-
+@CordaSerializable
 data class TestClass(val str1: String, val str2: String)
 
 
@@ -77,10 +73,12 @@ class YAMLTest2(val testClass: TestClass): FlowLogic<String>() {
 }
 
 
+
+
 @InitiatingFlow
 @StartableByRPC
 class CreateProposalFlow(val currentStateRef: StateRef,
-                         val candidateState: ContractState,
+                         val candidateState: AgreementState,
                          val expiryTime: Instant,
                          val responders: List<Party>
                          ): FlowLogic<SignedTransaction>(){
