@@ -2,6 +2,7 @@ package com.multilateralagreements
 
 import com.multilateralagreements.contracts.AgreementState
 import com.multilateralagreements.contracts.ProposalState
+import com.multilateralagreements.contracts.ReadyState
 import com.multilateralagreements.workflows.CreateAgreementFlow
 import com.multilateralagreements.workflows.CreateConsentFlow
 import com.multilateralagreements.workflows.CreateProposalFlow
@@ -18,6 +19,7 @@ import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.utilities.getOrThrow
 import net.corda.node.services.Permissions.Companion.invokeRpc
 import net.corda.node.services.Permissions.Companion.startFlow
+import net.corda.testing.common.internal.testNetworkParameters
 import net.corda.testing.core.TestIdentity
 import net.corda.testing.core.expect
 import net.corda.testing.core.expectEvents
@@ -58,7 +60,7 @@ class DriverBasedTest {
 
     // Runs a test inside the Driver DSL, which provides useful functions for starting nodes, etc.
     private fun withDriver(test: DriverDSL.() -> Unit) = driver(
-        DriverParameters(isDebug = true, startNodesInProcess = true)
+        DriverParameters(isDebug = true, startNodesInProcess = true, networkParameters = testNetworkParameters(minimumPlatformVersion = 4))
     ) { test() }
 
     // Makes an RPC call to retrieve another node's name from the network map.
@@ -120,7 +122,9 @@ class DriverBasedTest {
     }
 
     @Test
-    fun `Proposal test`() = withDriver {
+    fun `Create Proposal and Ready State test`() = withDriver {
+
+        // Set up
 
         val party1User = User("party1User", "", permissions = setOf(
                 startFlow<CreateAgreementFlow>(),
@@ -149,58 +153,193 @@ class DriverBasedTest {
         val party2Client = CordaRPCClient(party2.rpcAddress)
         val party2Proxy = party2Client.start("party2User", "").proxy
 
-        val party1VaultUpdates: Observable<Vault.Update<ContractState>> = party1Proxy.vaultTrackBy<ContractState>().updates
-        val party2VaultUpdates: Observable<Vault.Update<ContractState>> = party2Proxy.vaultTrackBy<ContractState>().updates
+
+        // Party1 Creates agreement State
+
+        val party1VaultUpdates_1: Observable<Vault.Update<ContractState>> = party1Proxy.vaultTrackBy<ContractState>().updates
+        val party2VaultUpdates_1: Observable<Vault.Update<ContractState>> = party2Proxy.vaultTrackBy<ContractState>().updates
 
         party1Proxy.startFlow(::CreateAgreementFlow, "This is a mock agreement", party2.nodeInfo.singleIdentity()). returnValue.getOrThrow()
 
-        println("MB: event 1")
+        val agreementStateRefs = mutableListOf<StateRef>()
 
-        val agreementStateRef = mutableListOf<StateRef>()
-
-        party2VaultUpdates.expectEvents {
+        party2VaultUpdates_1.expectEvents {
             expect{ update ->
-                println("MB: event 2")
+                println("MB: event 2a")
                 println("MB: Party2 got a vault update of $update")
                 val stateAndRef = update.produced.first()
                 val state = stateAndRef.state.data as AgreementState
                 assert(state.agreementDetails == "This is a mock agreement")
-                agreementStateRef.add(stateAndRef.ref)
+                agreementStateRefs.add(stateAndRef.ref)
+            }
+        }
+        party1VaultUpdates_1.expectEvents {
+            expect{ update ->
+                println("MB: event 2b")
+                println("MB: Party1 got a vault update of $update")
+                val stateAndRef = update.produced.first()
+                val state = stateAndRef.state.data as AgreementState
+                assert(state.agreementDetails == "This is a mock agreement")
             }
         }
 
-        println("MB: agreementStateRef: $agreementStateRef")
-        println("MB: event 3")
 
-        val criteria = QueryCriteria.VaultQueryCriteria(stateRefs = agreementStateRef)
+        // Create proposal state (party 2 proposer, party 1 responder)
 
-        val agreementState = party1Proxy.vaultQueryBy<AgreementState>(criteria).states.single().state.data
-
+        val agreementCriteria = QueryCriteria.VaultQueryCriteria(stateRefs = agreementStateRefs)
+        val agreementState = party2Proxy.vaultQueryBy<AgreementState>(agreementCriteria).states.single().state.data
         val candidateState = agreementState.copy(agreementDetails = "This is a modified agreement")
 
-        party2Proxy.startFlow(::CreateProposalFlow, agreementStateRef.single(), candidateState, Instant.MAX, listOf(party1.nodeInfo.singleIdentity() ))
+        val party1VaultUpdates_2: Observable<Vault.Update<ContractState>> = party1Proxy.vaultTrackBy<ContractState>().updates
 
-        party1VaultUpdates.expectEvents {
+        party2Proxy.startFlow(::CreateProposalFlow, agreementStateRefs.single(), candidateState, Instant.MAX, listOf(party1.nodeInfo.singleIdentity() ))
+
+        val proposalStateRefs = mutableListOf<StateRef>()
+
+        party1VaultUpdates_2.expectEvents {
             expect{ update ->
                 println("MB: Party1 got a vault update of $update")
-//                val stateAndRef = update.produced.first()
-//                val state = stateAndRef.state.data as ProposalState
-//                val cs = state.candidateState as AgreementState
-//                assert(cs.agreementDetails == "This is a modified agreement")
-
-// :todo mpv = 4
-
+                val stateAndRef = update.produced.first()
+                val state = stateAndRef.state.data as ProposalState
+                val cs = state.candidateState as AgreementState
+                assert(cs.agreementDetails == "This is a modified agreement")
+                proposalStateRefs.add(stateAndRef.ref)
             }
         }
 
+        // party 1 creates ready state
 
+        val party2VaultUpdates_2: Observable<Vault.Update<ContractState>> = party2Proxy.vaultTrackBy<ContractState>().updates
 
+        party1Proxy.startFlow(::CreateConsentFlow, proposalStateRefs.single(), Instant.MAX)
 
+        val readyStateRefs = mutableListOf<StateRef>()
 
+        party2VaultUpdates_2.expectEvents {
+            expect{ update ->
+                println("MB: Party2 got a vault update of $update")
+                val stateAndRef = update.produced.first()
+                val state = stateAndRef.state.data as ReadyState
+                assert(state.proposalStateRef == proposalStateRefs.single())
+                readyStateRefs.add(stateAndRef.ref)
+            }
+        }
+
+        val vaultSnapShot = party1Proxy.vaultQueryBy<ContractState>()
+
+        println("MB: vaultSnapShot: $vaultSnapShot")
 
     }
 
+    @Test
+    fun `requires Proposal and ready to update Agreement State Test`() = withDriver {
 
+        // Set up
+
+        val party1User = User("party1User", "", permissions = setOf(
+                startFlow<CreateAgreementFlow>(),
+                startFlow<CreateProposalFlow>(),
+                startFlow<CreateConsentFlow>(),
+                startFlow<GetProposalStatesFromAgreementStateRefFlow>(),
+                invokeRpc("vaultTrackBy")
+        ))
+
+        val party2User = User("party2User", "", permissions = setOf(
+                startFlow<CreateAgreementFlow>(),
+                startFlow<CreateProposalFlow>(),
+                startFlow<CreateConsentFlow>(),
+                startFlow<GetProposalStatesFromAgreementStateRefFlow>(),
+                invokeRpc("vaultTrackBy")
+        ))
+
+        val (party1, party2) = listOf(
+                startNode(providedName = party1Identity.name,rpcUsers = listOf(party1User) ),
+                startNode(providedName = party2Identity.name,rpcUsers = listOf(party2User) )
+        ).map { it.getOrThrow() }
+
+        val party1Client = CordaRPCClient(party1.rpcAddress)
+        val party1Proxy = party1Client.start("party1User", "").proxy
+
+        val party2Client = CordaRPCClient(party2.rpcAddress)
+        val party2Proxy = party2Client.start("party2User", "").proxy
+
+
+        // Party1 Creates agreement State
+
+        val party1VaultUpdates_1: Observable<Vault.Update<ContractState>> = party1Proxy.vaultTrackBy<ContractState>().updates
+        val party2VaultUpdates_1: Observable<Vault.Update<ContractState>> = party2Proxy.vaultTrackBy<ContractState>().updates
+
+        party1Proxy.startFlow(::CreateAgreementFlow, "This is a mock agreement", party2.nodeInfo.singleIdentity()). returnValue.getOrThrow()
+
+        val agreementStateRefs = mutableListOf<StateRef>()
+
+        party2VaultUpdates_1.expectEvents {
+            expect{ update ->
+                println("MB: event 2a")
+                println("MB: Party2 got a vault update of $update")
+                val stateAndRef = update.produced.first()
+                val state = stateAndRef.state.data as AgreementState
+                assert(state.agreementDetails == "This is a mock agreement")
+                agreementStateRefs.add(stateAndRef.ref)
+            }
+        }
+        party1VaultUpdates_1.expectEvents {
+            expect{ update ->
+                println("MB: event 2b")
+                println("MB: Party1 got a vault update of $update")
+                val stateAndRef = update.produced.first()
+                val state = stateAndRef.state.data as AgreementState
+                assert(state.agreementDetails == "This is a mock agreement")
+            }
+        }
+
+
+        // Create proposal state (party 2 proposer, party 1 responder)
+
+        val agreementCriteria = QueryCriteria.VaultQueryCriteria(stateRefs = agreementStateRefs)
+        val agreementState = party2Proxy.vaultQueryBy<AgreementState>(agreementCriteria).states.single().state.data
+        val candidateState = agreementState.copy(agreementDetails = "This is a modified agreement")
+
+        val party1VaultUpdates_2: Observable<Vault.Update<ContractState>> = party1Proxy.vaultTrackBy<ContractState>().updates
+
+        party2Proxy.startFlow(::CreateProposalFlow, agreementStateRefs.single(), candidateState, Instant.MAX, listOf(party1.nodeInfo.singleIdentity() ))
+
+        val proposalStateRefs = mutableListOf<StateRef>()
+
+        party1VaultUpdates_2.expectEvents {
+            expect{ update ->
+                println("MB: Party1 got a vault update of $update")
+                val stateAndRef = update.produced.first()
+                val state = stateAndRef.state.data as ProposalState
+                val cs = state.candidateState as AgreementState
+                assert(cs.agreementDetails == "This is a modified agreement")
+                proposalStateRefs.add(stateAndRef.ref)
+            }
+        }
+
+        // party 1 creates ready state
+
+        val party2VaultUpdates_2: Observable<Vault.Update<ContractState>> = party2Proxy.vaultTrackBy<ContractState>().updates
+
+        party1Proxy.startFlow(::CreateConsentFlow, proposalStateRefs.single(), Instant.MAX)
+
+        val readyStateRefs = mutableListOf<StateRef>()
+
+        party2VaultUpdates_2.expectEvents {
+            expect{ update ->
+                println("MB: Party2 got a vault update of $update")
+                val stateAndRef = update.produced.first()
+                val state = stateAndRef.state.data as ReadyState
+                assert(state.proposalStateRef == proposalStateRefs.single())
+                readyStateRefs.add(stateAndRef.ref)
+            }
+        }
+
+        val vaultSnapShot = party1Proxy.vaultQueryBy<ContractState>()
+
+        println("MB: vaultSnapShot: $vaultSnapShot")
+
+    }
 
 
 }
