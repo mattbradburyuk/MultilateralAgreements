@@ -43,11 +43,25 @@ class AgreementContractTests {
             party2 = party2.party,
             status = AgreementStateStatus.AGREED)
 
-    private val mockAgreementState_4 = AgreementState(agreementDetails = "This is an unrelated mock agreement",
+    private val mockAgreementState_4 = AgreementState(agreementDetails = "This is an alternative mock agreement",
             party1 = party1.party,
             party2 = party2.party,
             status = AgreementStateStatus.DRAFT)
 
+    private val currentAgreementStateDraft = AgreementState(agreementDetails = "This is current AgreementStatewith Status Draft",
+            party1 = party1.party,
+            party2 = party2.party,
+            status = AgreementStateStatus.DRAFT)
+
+    private val newAgreementStateAgreed = AgreementState(agreementDetails = "This is new AgreementState with status AGREED",
+            party1 = party1.party,
+            party2 = party2.party,
+            status = AgreementStateStatus.AGREED)
+
+    private val alternativeNewAgreementStateAgreed = AgreementState(agreementDetails = "This is an Alternative new AgreementState with status AGREED",
+            party1 = party1.party,
+            party2 = party2.party,
+            status = AgreementStateStatus.AGREED)
 
     data class DummyState(val party: Party) : ContractState {
         override val participants: List<AbstractParty> = listOf(party)
@@ -307,28 +321,29 @@ class AgreementContractTests {
 
             // Set up Agreement State on Ledger
             transaction {
-                output(AgreementContract.ID, "AgreementState Label", mockAgreementState)
+                output(AgreementContract.ID, "Current AgreementState Label", currentAgreementStateDraft)
                 command(party1.publicKey, AgreementContract.Commands.Create())
                 this.verifies()
             }
 
             // Get StaticPointer to ref state and create the ProposalState
-            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "AgreementState Label")
-            val proposalState = ProposalState(agreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+            val agreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "Current AgreementState Label")
+            val proposalState = ProposalState(agreementStateStateAndRef.ref, newAgreementStateAgreed, Instant.now(), party1.party, listOf(party2.party))
 
             // set up ProposalState on Ledger
             transaction {
-                reference("AgreementState Label")
+                reference("Current AgreementState Label")
                 output(ProposalContract.ID, "ProposalState Label",  proposalState)
                 command(party1.publicKey, ProposalContract.Commands.Propose())
                 this.verifies()
             }
 
             val proposalStateStateAndRef = retrieveOutputStateAndRef(ProposalState::class.java, "ProposalState Label")
-            val readyState = ReadyState(party2.party, proposalStateStateAndRef.ref, agreementStateStateAndRef.ref, Instant.MAX, proposalState.proposer, proposalState.responders)
-
 
             // Set up ReadyState on Ledger
+
+            val readyState = ReadyState(party2.party, proposalStateStateAndRef.ref, agreementStateStateAndRef.ref, Instant.MAX, proposalState.proposer, proposalState.responders)
+
             transaction {
                 reference("ProposalState Label")
                 output(ProposalContract.ID,"ReadyState Label", readyState)
@@ -336,79 +351,64 @@ class AgreementContractTests {
                 this.verifies()
             }
 
-            // verifies
+            // happy case verifies
             transaction {
-                input("AgreementState Label")
+                input("Current AgreementState Label")
                 input("ProposalState Label")
                 input("ReadyState Label")
-                output(AgreementContract.ID, mockAgreementState_3)
+                output(AgreementContract.ID, newAgreementStateAgreed)
                 command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
                 command(listOf(party1.publicKey), ProposalContract.Commands.Finalise())
                 this.verifies()
             }
 
-            // No Proposal state
+            // No Proposal state - lack of ProposalState causes multiple fails
             transaction {
-                input("AgreementState Label")
+                input("Current AgreementState Label")
 //                input("ProposalState Label")
                 input("ReadyState Label")
-                output(AgreementContract.ID, mockAgreementState_3)
+                output(AgreementContract.ID, newAgreementStateAgreed)
                 command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
                 command(listOf(party1.publicKey), ProposalContract.Commands.Finalise())
-                this.`fails with`("There must be one and only one ProposalState whose currentStateRef equals the input AgreementState ")
+                this.fails()
             }
 
-
-            // set up extra unrelated agreement state and unrelated proposal
-
-            transaction {
-                output(AgreementContract.ID, "Unrelated AgreementState Label", mockAgreementState_4)
-                command(party1.publicKey, AgreementContract.Commands.Create())
-                this.verifies()
-            }
-
-            val unrelatedAgreementStateStateAndRef = retrieveOutputStateAndRef(AgreementState::class.java, "Unrelated AgreementState Label")
-            val unrelatedProposalState = ProposalState(unrelatedAgreementStateStateAndRef.ref, mockAgreementState_3, Instant.now(), party1.party, listOf(party2.party))
+//            // set up a different proposal on the same AgreementState
+            val unrelatedProposalState = ProposalState(agreementStateStateAndRef.ref, alternativeNewAgreementStateAgreed, Instant.now(), party1.party, listOf(party2.party))
 
             transaction {
-                reference("Unrelated AgreementState Label")
+                reference("Current AgreementState Label")
                 output(ProposalContract.ID, "Unrelated ProposalState Label",  unrelatedProposalState)
                 command(party1.publicKey, ProposalContract.Commands.Propose())
                 this.verifies()
             }
 
-
-            // todo: extra AgreementContract tests
-
-            // Extra different Proposal State  - verifies
-            // verifies
+            // two different ProposalStates - multiple ProposalState causes multiple fails
             transaction {
-                input("AgreementState Label")
-                input("ProposalState Label")
-                input("ReadyState Label")
-                output(AgreementContract.ID, mockAgreementState_3)
-                command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
-                command(listOf(party1.publicKey), ProposalContract.Commands.Finalise())
-                this.verifies()
-            }
-
-            transaction {
-                input("AgreementState Label")
+                input("Current AgreementState Label")
                 input("ProposalState Label")
                 input("Unrelated ProposalState Label")
                 input("ReadyState Label")
-                output(AgreementContract.ID, mockAgreementState_3)
+                output(AgreementContract.ID, newAgreementStateAgreed)
                 command(listOf(party1.publicKey), ProposalContract.Commands.Finalise())
                 command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
-                this.`fails with`("There should be a single ProposalState inputs")
+                this.fails()
             }
 
+            //  Two identical proposals for one agreement state - not tested - can't have duplicate input states as won't work with DSL
 
+            // Proposal doesn't match new Agreement - fails
+            transaction {
+                input("Current AgreementState Label")
+                input("Unrelated ProposalState Label")
+                input("ReadyState Label")
+                output(AgreementContract.ID, newAgreementStateAgreed)
+                command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
+                command(listOf(party1.publicKey), ProposalContract.Commands.Finalise())
+                this.`fails with`("Transaction must contain a ProposalState whose candidateState is the same as the output AgreementState")
+            }
 
-
-            // Two proposals for one agreement state - fails
-
-            // Proposal doesn't match Agreement - fails
+            // didn't test proposal points to a different AgreementState
 
             println("Pause")
 

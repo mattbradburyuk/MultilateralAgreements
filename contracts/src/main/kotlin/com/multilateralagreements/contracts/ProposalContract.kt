@@ -21,7 +21,7 @@ class ProposalContract : Contract {
 
 // todo: Make the contract and state current state agnostic
 
-// todo: current can only have 0ne Propose state in a trnascation - make it so you can have multiple
+// todo: current can only have one Propose state in a transcation - make it so you can have multiple
 
 // todo add constraints around expiry time
 

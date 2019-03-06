@@ -99,13 +99,13 @@ class AgreementContract : Contract {
             // Requires Proposal State
 
             val agreementStateInputStateAndRef = tx.inputs.filterStatesOfType<AgreementState>().single()
+            val proposalStateStateAndRef = tx.inputs.filterStatesOfType<ProposalState>().single()
 
-            val proposalStateStateAndRefs = tx.inputs.filterStatesOfType<ProposalState>()
-            val relevantProposalStateStateAndRef = proposalStateStateAndRefs.filter {it.state.data.currentStateRef == agreementStateInputStateAndRef.ref }
 
-            "There must be one and only one ProposalState whose currentStateRef equals the input AgreementState " using (relevantProposalStateStateAndRef.size == 1)
 
-            val proposalState = relevantProposalStateStateAndRef.single().state.data
+            "There must be a ProposalState who's currentStateRef matches the AgreementState StateRef" using (proposalStateStateAndRef.state.data.currentStateRef == agreementStateInputStateAndRef.ref)
+
+            val proposalState = proposalStateStateAndRef.state.data
 
             "Transaction must contain a ProposalState whose candidateState is the same as the output AgreementState" using (proposalState.candidateState == agreementStateOutput)
 
