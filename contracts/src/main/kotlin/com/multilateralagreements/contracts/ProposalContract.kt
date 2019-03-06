@@ -21,6 +21,8 @@ class ProposalContract : Contract {
 
 // todo: Make the contract and state current state agnostic
 
+// todo: current can only have 0ne Propose state in a trnascation - make it so you can have multiple
+
 // todo add constraints around expiry time
 
     // Used to indicate the transaction's intent.

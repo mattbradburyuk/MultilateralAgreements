@@ -142,8 +142,7 @@ class CreateProposalResponderFlow(val otherPartySession: FlowSession): FlowLogic
 // todo: CancelProposalFlow
 // todo: CancelProposalResponderFlow
 
-// todo: ConsentFlow
-// todo: ConsentFlowResponder
+
 
 @InitiatingFlow
 @StartableByRPC

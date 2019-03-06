@@ -1,12 +1,11 @@
 package com.multilateralagreements
 
+//todo: is this in the right package?
+
 import com.multilateralagreements.contracts.AgreementState
 import com.multilateralagreements.contracts.ProposalState
 import com.multilateralagreements.contracts.ReadyState
-import com.multilateralagreements.workflows.CreateAgreementFlow
-import com.multilateralagreements.workflows.CreateConsentFlow
-import com.multilateralagreements.workflows.CreateProposalFlow
-import com.multilateralagreements.workflows.GetProposalStatesFromAgreementStateRefFlow
+import com.multilateralagreements.workflows.*
 import net.corda.client.rpc.CordaRPCClient
 import net.corda.core.contracts.ContractState
 import net.corda.core.contracts.StateRef
@@ -35,7 +34,6 @@ import java.time.Instant
 import java.util.concurrent.Future
 import kotlin.test.assertEquals
 
-// TODO: understand driver tests
 
 class DriverBasedTest {
     private val bankA = TestIdentity(CordaX500Name("BankA", "", "GB"))
@@ -76,7 +74,7 @@ class DriverBasedTest {
 
 
     @Test
-    fun `Agreement test`() = withDriver {
+    fun `agreement test`() = withDriver {
 
         val party1User = User("party1User", "", permissions = setOf(
                 startFlow<CreateAgreementFlow>(),
@@ -122,7 +120,7 @@ class DriverBasedTest {
     }
 
     @Test
-    fun `Create Proposal and Ready State test`() = withDriver {
+    fun `create Proposal and Ready State test`() = withDriver {
 
         // Set up
 
@@ -234,10 +232,13 @@ class DriverBasedTest {
     @Test
     fun `requires Proposal and ready to update Agreement State Test`() = withDriver {
 
+        // todo: add proposal and readystate condition to AgreementContract
+
         // Set up
 
         val party1User = User("party1User", "", permissions = setOf(
                 startFlow<CreateAgreementFlow>(),
+                startFlow<AgreeAgreementFlow>(),
                 startFlow<CreateProposalFlow>(),
                 startFlow<CreateConsentFlow>(),
                 startFlow<GetProposalStatesFromAgreementStateRefFlow>(),
@@ -246,6 +247,7 @@ class DriverBasedTest {
 
         val party2User = User("party2User", "", permissions = setOf(
                 startFlow<CreateAgreementFlow>(),
+                startFlow<AgreeAgreementFlow>(),
                 startFlow<CreateProposalFlow>(),
                 startFlow<CreateConsentFlow>(),
                 startFlow<GetProposalStatesFromAgreementStateRefFlow>(),
@@ -293,12 +295,45 @@ class DriverBasedTest {
             }
         }
 
-
-        // Create proposal state (party 2 proposer, party 1 responder)
+        // Candidate State
 
         val agreementCriteria = QueryCriteria.VaultQueryCriteria(stateRefs = agreementStateRefs)
         val agreementState = party2Proxy.vaultQueryBy<AgreementState>(agreementCriteria).states.single().state.data
         val candidateState = agreementState.copy(agreementDetails = "This is a modified agreement")
+
+
+
+        // todo: qu: should the failure happen on sending or recieveing node - more robust if receiving node but would require some deliberatly malicious flows to be written - could these be written in the test suite though rather than the actual cordapp.
+
+        // Attempt to Agree Agreement by party 1 - should fail
+
+        var exception_1a: Exception? = null
+        try {
+            val flowResult = party1Proxy.startFlow(::AgreeAgreementFlow, candidateState.linearId, party2.nodeInfo.singleIdentity()).returnValue.getOrThrow()
+            println("MB: flowResult: $flowResult")
+        }catch(e: Exception){
+            println("MB: e: $e")
+
+            exception_1a = e
+        }
+        assert(exception_1a != null)
+
+        // Attempt to Agree Agreement by party 2 - should fail
+
+        var exception_1b: Exception? = null
+        try {
+            val flowResult = party2Proxy.startFlow(::AgreeAgreementFlow, candidateState.linearId, party1.nodeInfo.singleIdentity()).returnValue.getOrThrow()
+            println("MB: flowResult: $flowResult")
+        }catch(e: Exception){
+            println("MB: e: $e")
+
+            exception_1b = e
+        }
+        assert(exception_1b != null)
+
+
+
+        // Create proposal state (party 2 proposer, party 1 responder)
 
         val party1VaultUpdates_2: Observable<Vault.Update<ContractState>> = party1Proxy.vaultTrackBy<ContractState>().updates
 
@@ -316,6 +351,37 @@ class DriverBasedTest {
                 proposalStateRefs.add(stateAndRef.ref)
             }
         }
+
+
+
+        // Attempt to Agree Agreement by party 1 - should fail
+
+        var exception_2a: Exception? = null
+        try {
+            val flowResult = party1Proxy.startFlow(::AgreeAgreementFlow, candidateState.linearId, party2.nodeInfo.singleIdentity()).returnValue.getOrThrow()
+            println("MB: flowResult: $flowResult")
+        }catch(e: Exception){
+            println("MB: e: $e")
+
+            exception_2a = e
+        }
+        assert(exception_2a != null)
+
+
+        // Attempt to Agree Agreement by party 2 - should fail
+
+        var exception_2b: Exception? = null
+        try {
+            val flowResult = party2Proxy.startFlow(::AgreeAgreementFlow, candidateState.linearId, party1.nodeInfo.singleIdentity()).returnValue.getOrThrow()
+            println("MB: flowResult: $flowResult")
+        }catch(e: Exception){
+            println("MB: e: $e")
+
+            exception_2b = e
+        }
+        assert(exception_2b != null)
+
+
 
         // party 1 creates ready state
 
@@ -338,6 +404,8 @@ class DriverBasedTest {
         val vaultSnapShot = party1Proxy.vaultQueryBy<ContractState>()
 
         println("MB: vaultSnapShot: $vaultSnapShot")
+
+        // todo: add attempted agreement change - expect to pass
 
     }
 

@@ -1,10 +1,6 @@
 package com.multilateralagreements.contracts
 
-import com.multilateralagreements.contracts.AgreementState
-import net.corda.core.contracts.Command
-import net.corda.core.contracts.CommandData
-import net.corda.core.contracts.Contract
-import net.corda.core.contracts.requireThat
+import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
 import java.security.PublicKey
 
@@ -76,6 +72,8 @@ class AgreementContract : Contract {
 
         requireThat {
 
+//            "forced fail" using (false)
+
             // AgreementState inputs
 
             val agreementStateInputs = tx.inputsOfType<AgreementState>()
@@ -86,9 +84,9 @@ class AgreementContract : Contract {
 
             // AgreementState outputs
 
-            val agreementStateOuputs= tx.outputsOfType<AgreementState>()
-            "There should be one output state of type AgreementState" using (agreementStateOuputs.size ==1)
-            val agreementStateOutput = agreementStateOuputs.single()
+            val agreementStateOutputs= tx.outputsOfType<AgreementState>()
+            "There should be one output state of type AgreementState" using (agreementStateOutputs.size ==1)
+            val agreementStateOutput = agreementStateOutputs.single()
             "Output AgreementState should have status AGREE" using (agreementStateOutput.status == AgreementStateStatus.AGREED)
 
 
@@ -96,7 +94,28 @@ class AgreementContract : Contract {
 
             "Both party1 and party2 must sign the transaction" using (setOf<PublicKey>(agreementStateInput.party1.owningKey, agreementStateInput.party2.owningKey) == command.signers.toSet())
 
-            // Todo: Add proposal and agree state requirements
+
+
+            // Requires Proposal State
+
+            val agreementStateInputStateAndRef = tx.inputs.filterStatesOfType<AgreementState>().single()
+
+            val proposalStateStateAndRefs = tx.inputs.filterStatesOfType<ProposalState>()
+            val relevantProposalStateStateAndRef = proposalStateStateAndRefs.filter {it.state.data.currentStateRef == agreementStateInputStateAndRef.ref }
+
+            "There must be one and only one ProposalState whose currentStateRef equals the input AgreementState " using (relevantProposalStateStateAndRef.size == 1)
+
+            val proposalState = relevantProposalStateStateAndRef.single().state.data
+
+            "Transaction must contain a ProposalState whose candidateState is the same as the output AgreementState" using (proposalState.candidateState == agreementStateOutput)
+
+
+            // require a signed ready state for each responder
+
+            val readyStateStateAndRefs = tx.inputs.filterStatesOfType<ReadyState>()
+            val readyStateStates = readyStateStateAndRefs.map { it.state.data }
+
+
 
         }
 
