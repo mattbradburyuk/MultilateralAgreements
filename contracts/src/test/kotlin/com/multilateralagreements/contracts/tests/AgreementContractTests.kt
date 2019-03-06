@@ -385,12 +385,11 @@ class AgreementContractTests {
             transaction {
                 input("AgreementState Label")
                 input("ProposalState Label")
-                input("Unrelated ProposalState Label")
                 input("ReadyState Label")
                 output(AgreementContract.ID, mockAgreementState_3)
                 command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
                 command(listOf(party1.publicKey), ProposalContract.Commands.Finalise())
-                this.`fails with`("There should be a single ProposalState inputs")
+                this.verifies()
             }
 
             transaction {
@@ -401,7 +400,7 @@ class AgreementContractTests {
                 output(AgreementContract.ID, mockAgreementState_3)
                 command(listOf(party1.publicKey), ProposalContract.Commands.Finalise())
                 command(listOf(party1.publicKey, party2.publicKey), AgreementContract.Commands.Agree())
-                this.`fails with`("There must be one and only one ProposalState whose currentStateRef equals the input AgreementState")
+                this.`fails with`("There should be a single ProposalState inputs")
             }
 
 
