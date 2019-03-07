@@ -3,6 +3,7 @@ package com.multilateralagreements
 //todo: is this in the right package?
 
 import com.multilateralagreements.contracts.AgreementState
+import com.multilateralagreements.contracts.AgreementStateStatus
 import com.multilateralagreements.contracts.ProposalState
 import com.multilateralagreements.contracts.ReadyState
 import com.multilateralagreements.workflows.*
@@ -299,7 +300,7 @@ class DriverBasedTest {
 
         val agreementCriteria = QueryCriteria.VaultQueryCriteria(stateRefs = agreementStateRefs)
         val agreementState = party2Proxy.vaultQueryBy<AgreementState>(agreementCriteria).states.single().state.data
-        val candidateState = agreementState.copy(agreementDetails = "This is a modified agreement")
+        val candidateState = agreementState.copy(agreementDetails = "This is a modified agreement", status = AgreementStateStatus.AGREED)
 
 
 
@@ -309,7 +310,8 @@ class DriverBasedTest {
 
         var exception_1a: Exception? = null
         try {
-            val flowResult = party1Proxy.startFlow(::AgreeAgreementFlow, candidateState.linearId, party2.nodeInfo.singleIdentity()).returnValue.getOrThrow()
+            //using agreementStateRef[0] as a proxy for a proposalRef
+            val flowResult = party1Proxy.startFlow(::AgreeAgreementFlow, agreementStateRefs.single(), agreementStateRefs.single(), party2.nodeInfo.singleIdentity()).returnValue.getOrThrow()
             println("MB: flowResult: $flowResult")
         }catch(e: Exception){
             println("MB: e: $e")
@@ -322,7 +324,7 @@ class DriverBasedTest {
 
         var exception_1b: Exception? = null
         try {
-            val flowResult = party2Proxy.startFlow(::AgreeAgreementFlow, candidateState.linearId, party1.nodeInfo.singleIdentity()).returnValue.getOrThrow()
+            val flowResult = party2Proxy.startFlow(::AgreeAgreementFlow, agreementStateRefs.single(), agreementStateRefs.single(), party2.nodeInfo.singleIdentity()).returnValue.getOrThrow()
             println("MB: flowResult: $flowResult")
         }catch(e: Exception){
             println("MB: e: $e")
@@ -358,7 +360,7 @@ class DriverBasedTest {
 
         var exception_2a: Exception? = null
         try {
-            val flowResult = party1Proxy.startFlow(::AgreeAgreementFlow, candidateState.linearId, party2.nodeInfo.singleIdentity()).returnValue.getOrThrow()
+            val flowResult = party1Proxy.startFlow(::AgreeAgreementFlow, agreementStateRefs.single(),proposalStateRefs.single(), party2.nodeInfo.singleIdentity()).returnValue.getOrThrow()
             println("MB: flowResult: $flowResult")
         }catch(e: Exception){
             println("MB: e: $e")
@@ -372,7 +374,7 @@ class DriverBasedTest {
 
         var exception_2b: Exception? = null
         try {
-            val flowResult = party2Proxy.startFlow(::AgreeAgreementFlow, candidateState.linearId, party1.nodeInfo.singleIdentity()).returnValue.getOrThrow()
+            val flowResult = party2Proxy.startFlow(::AgreeAgreementFlow, agreementStateRefs.single(),proposalStateRefs.single(), party2.nodeInfo.singleIdentity()).returnValue.getOrThrow()
             println("MB: flowResult: $flowResult")
         }catch(e: Exception){
             println("MB: e: $e")
@@ -401,30 +403,28 @@ class DriverBasedTest {
             }
         }
 
-        val vaultSnapShot = party1Proxy.vaultQueryBy<ContractState>()
-
-        println("MB: vaultSnapShot: $vaultSnapShot")
-
-        // todo: add attempted agreement change - expect to pass - need to modify agree flow first
-
 
 
         // party 1 finalises transaction
 
-//        val party2VaultUpdates_3: Observable<Vault.Update<ContractState>> = party1Proxy.vaultTrackBy<ContractState>().updates
+        val party2VaultUpdates_3: Observable<Vault.Update<ContractState>> = party1Proxy.vaultTrackBy<ContractState>().updates
+//
+        party1Proxy.startFlow(::AgreeAgreementFlow, agreementStateRefs.single(),proposalStateRefs.single(), party2.nodeInfo.singleIdentity())
+//
+        party2VaultUpdates_3.expectEvents {
+            expect{ update ->
+                println("MB: Party2 got a vault update of $update")
+                val stateAndRef = update.produced.first()
+                val state = stateAndRef.state.data as AgreementState
+                assert(state == candidateState)
+            }
+        }
 
-//        party1Proxy.startFlow(::AgreeAgreementFlow, candidateState.linearId, party2.nodeInfo.singleIdentity())
 
-//        party2VaultUpdates_3.expectEvents {
-//            expect{ update ->
-//                println("MB: Party2 got a vault update of $update")
-//                val stateAndRef = update.produced.first()
-//                val state = stateAndRef.state.data as AgreementState
-//                assert(state == candidateState)
-//            }
-//        }
+        val queryCriteria = QueryCriteria.VaultQueryCriteria(Vault.StateStatus.ALL)
+        val vaultSnapShot = party1Proxy.vaultQueryBy<ContractState>(queryCriteria)
 
-        println("MB: vaultSnapShot2: $vaultSnapShot")
+        println("MB: vaultSnapShot: $vaultSnapShot")
 
     }
 
