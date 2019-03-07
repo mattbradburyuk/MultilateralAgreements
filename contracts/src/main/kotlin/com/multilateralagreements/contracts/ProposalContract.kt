@@ -1,12 +1,6 @@
 package com.multilateralagreements.contracts
 
-import net.corda.core.contracts.Command
-import net.corda.core.contracts.CommandData
-import net.corda.core.contracts.Contract
-import net.corda.core.contracts.Requirements.using
-import net.corda.core.contracts.requireThat
-import net.corda.core.crypto.SecureHash
-import net.corda.core.crypto.SecureHash.Companion.sha256
+import net.corda.core.contracts.*
 import net.corda.core.transactions.LedgerTransaction
 
 // ************
@@ -102,21 +96,43 @@ class ProposalContract : Contract {
         requireThat {
 
             // ProposalState Inputs
-            val proposalStateInputs = tx.inputsOfType<ProposalState>()
-            "There should be a single ProposalState inputs" using (proposalStateInputs.size ==1 )
+//            val proposalStateInputs = tx.inputsOfType<ProposalState>()
+            val proposalStateInputsStateAndRefs= tx.inputs.filterStatesOfType<ProposalState>()
+            "There should be a single ProposalState inputs" using (proposalStateInputsStateAndRefs.size ==1 )
 
             // ProposalState Outputs
             val proposalStateOutputs = tx.outputsOfType<ProposalState>()
             "There should no output of type ProposalState" using (proposalStateOutputs.isEmpty())
 
             // Signatures
-            val proposalStateInput = proposalStateInputs.single()
-            val validSigners = listOf(proposalStateInput.proposer).union(proposalStateInput.responders)
+            val proposalStateStateAndRef = proposalStateInputsStateAndRefs.single()
+            val proposalState = proposalStateStateAndRef.state.data
+            val validSigners = listOf(proposalState.proposer).union(proposalState.responders)
             val validSignersKeys = validSigners.map{it.owningKey}
 
             "The proposer or any responder should sign the transaction" using (command.signers.intersect(validSignersKeys).isNotEmpty())
 
-            // todo: add must have ReadyState in finalise - if this is the right place to have it - might be better in AgreementContract
+            // require a ReadyState for each responder
+
+            val readyStateStateAndRefs = tx.inputs.filterStatesOfType<ReadyState>()
+            val readyStates = readyStateStateAndRefs.map { it.state.data }
+
+            //identify proposer
+
+            proposalState.responders.forEach { responder ->
+
+                val matchedReadyState = readyStates.filter {it.owner == responder}
+
+                "Each responder must have a readyState which they own" using (matchedReadyState.size == 1)
+
+                "Each ReadyState must refer to the correct ProposalState" using (matchedReadyState.single().proposalStateRef == proposalStateStateAndRef.ref)
+
+
+            }
+
+
+
+
         }
     }
 

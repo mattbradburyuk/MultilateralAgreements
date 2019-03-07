@@ -1,15 +1,15 @@
 package com.multilateralagreements.workflows
 
 import co.paralleluniverse.fibers.Suspendable
-import com.multilateralagreements.contracts.AgreementContract
-import com.multilateralagreements.contracts.AgreementState
-import com.multilateralagreements.contracts.AgreementStateStatus
+import com.multilateralagreements.contracts.*
+import net.corda.core.contracts.StateRef
 import net.corda.core.contracts.TransactionState
 import net.corda.core.contracts.UniqueIdentifier
 import net.corda.core.contracts.requireThat
 import net.corda.core.flows.*
 import net.corda.core.identity.Party
 import net.corda.core.node.services.queryBy
+import net.corda.core.node.services.vault.Builder.equal
 import net.corda.core.node.services.vault.QueryCriteria
 import net.corda.core.transactions.SignedTransaction
 import net.corda.core.transactions.TransactionBuilder
@@ -101,7 +101,7 @@ class CreateAgreementResponderFlow(val otherPartySession: FlowSession): FlowLogi
 
 @InitiatingFlow
 @StartableByRPC
-class AgreeAgreementFlow(val linearId: UniqueIdentifier, val otherParty: Party): FlowLogic<SignedTransaction>(){
+class AgreeAgreementFlowOld(val linearId: UniqueIdentifier, val otherParty: Party): FlowLogic<SignedTransaction>(){
 
     override val progressTracker = ProgressTracker()
 
@@ -139,7 +139,15 @@ class AgreeAgreementFlow(val linearId: UniqueIdentifier, val otherParty: Party):
         txBuilder.addCommand(command, signers)
         txBuilder.addOutputState(outputTxState)
 
-        txBuilder.verify(serviceHub)
+
+        try {
+            txBuilder.verify(serviceHub)
+        }catch(e:Exception){
+
+            println("MB: e on verify: $e")
+
+        }
+
 
         // Sign and finalise
 
@@ -151,6 +159,102 @@ class AgreeAgreementFlow(val linearId: UniqueIdentifier, val otherParty: Party):
 
     }
 }
+
+@InitiatingFlow
+@StartableByRPC
+class AgreeAgreementFlow(val currentStateRef: StateRef, val proposalStateRef: StateRef, val otherParty: Party): FlowLogic<SignedTransaction>(){
+
+    override val progressTracker = ProgressTracker()
+
+    @Suspendable
+    override fun call(): SignedTransaction {
+
+        // find current State
+
+        val currentStateCriteria = QueryCriteria.VaultQueryCriteria(stateRefs = listOf(currentStateRef))
+        val currentStateStateAndRef = serviceHub.vaultService.queryBy<AgreementState>(currentStateCriteria).states.single()
+        val currentState = currentStateStateAndRef.state.data
+
+        println("MB: agreementState: $currentState")
+
+        // find proposal State
+
+        val proposalStateCriteria = QueryCriteria.VaultQueryCriteria(stateRefs = listOf(proposalStateRef))
+        val proposalStateStateAndRef = serviceHub.vaultService.queryBy<ProposalState>(proposalStateCriteria).states.single()
+        val proposalState = proposalStateStateAndRef.state.data
+
+
+        println("MB: proposalState: $proposalState")
+
+
+        // get candidate State and cast to AgreementState
+
+        val candidateState = proposalState.candidateState as AgreementState
+
+
+        // find the readyStates
+
+        val readyStateCriteria = ReadyStateSchemaV1.PersistentReadyState::proposalStateRef.equal(proposalStateStateAndRef.ref)
+
+        val readyStateStateAndRefs =  serviceHub.vaultService.queryBy<ReadyState>(QueryCriteria.VaultCustomQueryCriteria(readyStateCriteria)).states
+
+        println("MB: readyStateStateAndRefs: $readyStateStateAndRefs")
+
+
+        //create commands and signers
+
+        val agreeCommand = AgreementContract.Commands.Agree()
+
+        val finaliseCommand = ProposalContract.Commands.Finalise()
+
+        val signers = listOf(currentState.party1, currentState.party2)
+
+        val signersKeys = signers.map {it.owningKey}
+
+        // get notary from input state
+
+        val notary = currentStateStateAndRef.state.notary
+
+        // build transaction
+
+        val txBuilder = TransactionBuilder()
+        txBuilder.notary = notary
+        txBuilder.addInputState(currentStateStateAndRef)
+        txBuilder.addInputState(proposalStateStateAndRef)
+
+        readyStateStateAndRefs.forEach { txBuilder.addInputState(it) }
+
+        txBuilder.addCommand(agreeCommand, signersKeys)
+        txBuilder.addCommand(finaliseCommand, signersKeys)
+
+        txBuilder.addOutputState(candidateState)
+
+//
+//
+        try {
+            txBuilder.verify(serviceHub)
+        }catch(e:Exception){
+
+            println("MB: e on verify: $e")
+
+        }
+
+        println("MB: txBuilder: $txBuilder")
+
+//        // Sign and finalise
+
+        val pstx = serviceHub.signInitialTransaction(txBuilder)
+        val session = initiateFlow(otherParty)
+        val stx: SignedTransaction = subFlow(CollectSignaturesFlow(pstx,listOf(session)))
+
+
+
+        return subFlow(FinalityFlow(stx, listOf(session)))
+
+    }
+}
+
+
 
 @InitiatedBy(AgreeAgreementFlow::class)
 class AgreeAgreementResponderFlow(val otherPartySession: FlowSession): FlowLogic<SignedTransaction>(){

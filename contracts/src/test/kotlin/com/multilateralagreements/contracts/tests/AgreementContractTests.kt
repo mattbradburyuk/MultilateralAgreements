@@ -314,6 +314,9 @@ class AgreementContractTests {
 //        }
 //    }
 
+    // todo: add signatures test
+
+
     @Test
     fun `agree - requires ProposalState`(){
 
@@ -410,19 +413,6 @@ class AgreementContractTests {
 
             // didn't test proposal points to a different AgreementState
 
-            println("Pause")
-
-
         }
-
-
-
-
     }
-
-
-
-
-
-
 }

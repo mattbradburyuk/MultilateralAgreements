@@ -26,6 +26,34 @@ object ProposalStateSchemaV1 : MappedSchema(schemaFamily = ProposalState::class.
             var proposer : Party) : PersistentState()
 }
 
+@CordaSerializable
+object ReadyStateSchemaV1 : MappedSchema(schemaFamily = ReadyState::class.java, version = 1, mappedTypes = listOf(PersistentReadyState::class.java)) {
+    @Entity
+    @Table(name = "ready_states")
+    class PersistentReadyState (
+
+            @Column(name = "owner")
+            var owner: Party,
+
+            @Column(name = "proposal_pointer")
+            @Convert(converter = StateRefToTextConverter::class)    // when explicitly stating which converter to use don't annotate the converter with
+            var proposalStateRef: StateRef,
+
+            @Column(name = "current_pointer")
+            @Convert(converter = StateRefToTextConverter::class)    // when explicitly stating which converter to use don't annotate the converter with
+            var currentStateRef: StateRef,
+
+            @Column(name = "proposer")
+            var proposer : Party) : PersistentState()
+}
+
+
+
+
+
+
+
+
 
 /**
  * Converts to and from a StateRef into a string.
@@ -49,9 +77,3 @@ class StateRefToTextConverter : AttributeConverter<StateRef, String> {
     }
 }
 
-
-// todo: Something wrong here, get error: org.hibernate.MappingException: Could not determine type for: net.corda.core.contracts.StaticPointer, at table: proposal_states, for columns: [org.hibernate.mapping.Column(current_pointer)]
-
-// todo: write a simple cordapp with a queryable state without StaticPointer, get it working, then add StaticPointer to see if it breaks
-
-// can also try compiling it against corda v3.3 before adding Static pointer

@@ -405,7 +405,26 @@ class DriverBasedTest {
 
         println("MB: vaultSnapShot: $vaultSnapShot")
 
-        // todo: add attempted agreement change - expect to pass
+        // todo: add attempted agreement change - expect to pass - need to modify agree flow first
+
+
+
+        // party 1 finalises transaction
+
+//        val party2VaultUpdates_3: Observable<Vault.Update<ContractState>> = party1Proxy.vaultTrackBy<ContractState>().updates
+
+//        party1Proxy.startFlow(::AgreeAgreementFlow, candidateState.linearId, party2.nodeInfo.singleIdentity())
+
+//        party2VaultUpdates_3.expectEvents {
+//            expect{ update ->
+//                println("MB: Party2 got a vault update of $update")
+//                val stateAndRef = update.produced.first()
+//                val state = stateAndRef.state.data as AgreementState
+//                assert(state == candidateState)
+//            }
+//        }
+
+        println("MB: vaultSnapShot2: $vaultSnapShot")
 
     }
 
