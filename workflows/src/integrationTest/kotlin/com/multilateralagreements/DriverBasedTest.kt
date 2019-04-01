@@ -35,6 +35,9 @@ import java.time.Instant
 import java.util.concurrent.Future
 import kotlin.test.assertEquals
 
+// to configure JUnit tests:
+// VM modules: -ea -javaagent:lib/quasar.jar
+// working directory: .
 
 class DriverBasedTest {
     private val bankA = TestIdentity(CordaX500Name("BankA", "", "GB"))

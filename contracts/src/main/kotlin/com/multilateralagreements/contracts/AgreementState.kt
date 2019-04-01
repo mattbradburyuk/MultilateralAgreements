@@ -23,6 +23,7 @@ data class AgreementState(val agreementDetails: String,
     override val participants: List<AbstractParty> = listOf(party1, party2)
 
 }
+// :todo work out problems with upgrading enums and find an alternative (use objects like in progress tracker??)
 
 @CordaSerializable
 enum class AgreementStateStatus{ DRAFT, AGREED}

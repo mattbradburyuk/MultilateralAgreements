@@ -20,6 +20,11 @@ import java.time.Instant
 import kotlin.test.assert
 
 
+// to configure JUnit tests:
+// VM modules: -ea -javaagent:lib/quasar.jar
+// working directory: .
+
+
 class AgreementContractFlowsTests {
 
     val mnp = MockNetworkParameters(listOf(TestCordapp.findCordapp("com.multilateralagreements.contracts"), TestCordapp.findCordapp("com.multilateralagreements.workflows")

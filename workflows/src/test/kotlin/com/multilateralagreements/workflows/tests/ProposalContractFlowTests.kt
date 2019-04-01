@@ -19,6 +19,9 @@ import org.junit.Before
 import org.junit.Test
 import java.time.Instant
 
+// to configure JUnit tests:
+// VM modules: -ea -javaagent:lib/quasar.jar
+// working directory: .
 
 class ProposalContractFlowsTests {
 
